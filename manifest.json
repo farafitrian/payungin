@@ -1,0 +1,16 @@
+{
+  "name": "Payungin",
+  "short_name": "Payungin",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f4f6fb",
+  "theme_color": "#1a2b4a",
+  "description": "Aplikasi Pinjam Payung Kampus",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3313/3313888.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
