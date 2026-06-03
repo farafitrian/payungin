@@ -1,0 +1,2973 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <link rel="icon" href="assets/icon-payungin.png">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#1a2b4a">
+  <title>Payungin – Pinjam Payung Kampus</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <style>
+    :root {
+      --navy: #1a2b4a;
+      --navy-dark: #0f1e35;
+      --navy-light: #243660;
+      --blue: #3b82f6;
+      --blue-light: #dbeafe;
+      --green: #16a34a;
+      --green-light: #dcfce7;
+      --orange: #ea580c;
+      --red: #dc2626;
+      --red-light: #fee2e2;
+      --bg: #f1f5fb;
+      --card: #ffffff;
+      --text: #1a2b4a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --shadow: 0 1px 4px rgba(26,43,74,0.07), 0 4px 16px rgba(26,43,74,0.06);
+      --shadow-lg: 0 8px 32px rgba(26,43,74,0.13);
+      --r: 14px;
+      --r-sm: 10px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-tap-highlight-color: transparent;
+    }
+    a { color: inherit; text-decoration: none; }
+    button { font-family: inherit; cursor: pointer; }
+    input, textarea { font-family: inherit; }
+
+    /* ═══════════════════════════════════════
+       AUTH SCREEN
+    ═══════════════════════════════════════ */
+    #auth-screen {
+      display: none;
+      min-height: 100vh;
+      background: linear-gradient(160deg, var(--navy-dark) 0%, #1e3a6e 55%, var(--navy-light) 100%);
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    #auth-screen.visible { display: flex; }
+    .auth-blob { position: absolute; border-radius: 50%; pointer-events: none; }
+    .auth-blob:nth-child(1) { width: 500px; height: 500px; top: -200px; right: -150px; background: rgba(59,130,246,.08); }
+    .auth-blob:nth-child(2) { width: 350px; height: 350px; bottom: -120px; left: -120px; background: rgba(6,182,212,.06); }
+
+    .auth-card {
+      background: var(--card);
+      border-radius: 24px;
+      box-shadow: 0 24px 80px rgba(0,0,0,.25);
+      width: 100%;
+      max-width: 440px;
+      padding: 40px 36px 44px;
+      position: relative;
+      z-index: 1;
+    }
+    .auth-logo-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+    .auth-logo { width: 48px; height: 48px; background: var(--navy); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+    .auth-logo-row h1 { font-size: 22px; font-weight: 800; color: var(--navy); }
+    .auth-tagline { font-size: 13px; color: var(--muted); margin-bottom: 28px; }
+
+    .auth-tabs { display: flex; background: var(--bg); border-radius: 10px; padding: 4px; margin-bottom: 24px; }
+    .auth-tab { flex: 1; padding: 9px; border: none; border-radius: 7px; background: transparent; font-size: 14px; font-weight: 600; color: var(--muted); cursor: pointer; transition: all .2s; }
+    .auth-tab.active { background: var(--card); color: var(--navy); box-shadow: var(--shadow); }
+
+    .auth-form { display: none; }
+    .auth-form.active { display: block; }
+
+    .f-group { margin-bottom: 14px; }
+    .f-label { font-size: 11.5px; font-weight: 700; color: var(--muted); margin-bottom: 5px; display: block; text-transform: uppercase; letter-spacing: .5px; }
+    .f-input { width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 14px; color: var(--text); background: var(--bg); outline: none; transition: border-color .2s; }
+    .f-input:focus { border-color: var(--blue); background: #fff; }
+    .f-input::placeholder { color: #a0aec0; }
+
+    .btn-auth { width: 100%; background: var(--navy); color: #fff; border: none; border-radius: 12px; padding: 14px; font-size: 15px; font-weight: 800; margin-top: 6px; transition: background .2s, transform .15s; }
+    .btn-auth:hover { background: var(--navy-light); }
+    .btn-auth:active { transform: scale(.98); }
+
+    /* ═══════════════════════════════════════
+       MAIN LAYOUT (web style)
+    ═══════════════════════════════════════ */
+    #main-app { display: none; min-height: 100vh; flex-direction: column; }
+    #main-app.visible { display: flex; }
+
+    /* Top navbar */
+    .topbar {
+      background: var(--navy);
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      box-shadow: 0 2px 12px rgba(0,0,0,.15);
+    }
+    .topbar-brand { display: flex; align-items: center; gap: 10px; color: #fff; font-size: 18px; font-weight: 800; }
+    .topbar-logo { width: 32px; height: 32px; background: rgba(255,255,255,.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .topbar-nav { display: flex; align-items: center; gap: 4px; }
+    .topbar-btn { background: transparent; border: none; color: rgba(255,255,255,.7); padding: 8px 14px; border-radius: 8px; font-size: 13.5px; font-weight: 600; transition: all .2s; display: flex; align-items: center; gap: 7px; }
+    .topbar-btn:hover { background: rgba(255,255,255,.1); color: #fff; }
+    .topbar-btn.active { background: rgba(255,255,255,.15); color: #fff; }
+    .topbar-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+    .topbar-saldo { background: rgba(255,255,255,.1); border-radius: 8px; padding: 6px 14px; color: #fff; font-size: 13px; font-weight: 700; }
+    .topbar-avatar { width: 34px; height: 34px; background: var(--blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 800; color: #fff; cursor: pointer; }
+    .topbar-logout { background: rgba(255,255,255,.1); border: none; color: rgba(255,255,255,.8); border-radius: 8px; padding: 7px 12px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all .2s; }
+    .topbar-logout:hover { background: rgba(220,38,38,.3); color: #fff; }
+
+    /* Pages */
+    .page { display: none; flex: 1; }
+    .page.active { display: block; }
+
+    /* Content container */
+    .container { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+    .container-sm { max-width: 800px; margin: 0 auto; padding: 32px 24px; }
+
+    /* Grid */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } .grid-3 { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 480px) { .grid-3 { grid-template-columns: 1fr; } .topbar { padding: 0 16px; } .topbar-btn span { display: none; } }
+
+    /* Cards */
+    .card { background: var(--card); border-radius: var(--r); box-shadow: var(--shadow); padding: 24px; }
+    .card-sm { background: var(--card); border-radius: var(--r-sm); box-shadow: var(--shadow); padding: 16px 18px; }
+
+    /* Section title */
+    .sec-title { font-size: 18px; font-weight: 800; margin-bottom: 16px; }
+    .sec-sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; margin-top: -10px; }
+
+    /* ═══════════════════════════════════════
+       HOME PAGE
+    ═══════════════════════════════════════ */
+    .home-hero {
+      background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy-light) 100%);
+      padding: 40px 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .home-hero::before { content:''; position:absolute; top:-80px; right:-80px; width:320px; height:320px; border-radius:50%; background:rgba(59,130,246,.1); }
+    .home-hero::after  { content:''; position:absolute; bottom:-60px; left:-60px; width:220px; height:220px; border-radius:50%; background:rgba(6,182,212,.07); }
+    .home-hero-inner { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; }
+    .home-hero h2 { color: #fff; font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+    .home-hero p { color: rgba(255,255,255,.65); font-size: 14px; }
+
+    .hero-saldo-card {
+      background: rgba(255,255,255,.12);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: var(--r);
+      padding: 18px 22px;
+      min-width: 220px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .hero-saldo-label { font-size: 11px; color: rgba(255,255,255,.7); margin-bottom: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+    .hero-saldo-amount { font-size: 22px; font-weight: 800; color: #fff; }
+    .btn-topup-hero { background: #fff; color: var(--navy); border: none; border-radius: 8px; padding: 9px 18px; font-size: 13px; font-weight: 800; cursor: pointer; white-space: nowrap; transition: transform .15s, box-shadow .15s; }
+    .btn-topup-hero:hover { transform: scale(1.04); box-shadow: 0 4px 12px rgba(0,0,0,.15); }
+
+    /* QR card */
+    .qr-scan-card {
+      background: var(--card);
+      border-radius: var(--r);
+      box-shadow: var(--shadow);
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: box-shadow .2s, transform .2s;
+      border: 2px solid transparent;
+    }
+    .qr-scan-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-3px); border-color: var(--blue-light); }
+    .qr-ring { width: 100px; height: 100px; border-radius: 50%; border: 2.5px dashed #94a3b8; display: flex; align-items: center; justify-content: center; animation: spin 12s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .qr-inner { width: 76px; height: 76px; border-radius: 50%; background: var(--navy); display: flex; align-items: center; justify-content: center; }
+    .qr-card-label { font-size: 15px; font-weight: 700; }
+    .qr-card-sub { font-size: 12.5px; color: var(--muted); }
+
+    /* Station list */
+    .station-row { display: flex; align-items: center; justify-content: space-between; background: var(--card); border-radius: var(--r-sm); box-shadow: var(--shadow); padding: 14px 18px; margin-bottom: 10px; cursor: pointer; transition: transform .15s, box-shadow .15s; border: 1px solid transparent; }
+    .station-row:hover { transform: translateX(4px); box-shadow: var(--shadow-lg); border-color: var(--blue-light); }
+    .station-name { font-size: 14px; font-weight: 700; }
+    .station-avail { font-size: 12px; font-weight: 600; margin-top: 2px; }
+    .green { color: var(--green); }
+    .orange { color: var(--orange); }
+
+    /* ═══════════════════════════════════════
+       PEMINJAMAN PAGE
+    ═══════════════════════════════════════ */
+    .page-banner { background: linear-gradient(135deg, var(--navy-dark), var(--navy-light)); padding: 28px 24px; margin-bottom: 0; }
+    .page-banner h2 { color: #fff; font-size: 20px; font-weight: 800; max-width: 1100px; margin: 0 auto; }
+
+    .loan-card { background: var(--card); border-radius: var(--r); box-shadow: var(--shadow-lg); padding: 24px; margin-bottom: 16px; border-left: 4px solid var(--blue); }
+    .loan-id-badge { background: #eff6ff; border: 1.5px solid var(--blue); border-radius: 8px; padding: 8px 14px; margin-bottom: 14px; display: inline-block; font-size: 13.5px; font-weight: 800; color: var(--blue); }
+    .loan-meta { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+    .timer-block .lbl { font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 2px; }
+    .timer-val { font-size: 34px; font-weight: 800; letter-spacing: -1px; font-variant-numeric: tabular-nums; }
+    .loan-from { font-size: 12px; color: var(--muted); margin-top: 10px; }
+    .loan-from strong { color: var(--text); }
+
+    .btn-kembalikan { background: var(--blue); color: #fff; border: none; border-radius: 10px; padding: 12px 24px; font-size: 14px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(59,130,246,.35); transition: background .2s, transform .15s; }
+    .btn-kembalikan:hover { background: #2563eb; transform: scale(1.04); }
+
+    .no-loan-box { text-align: center; padding: 60px 32px; background: var(--card); border-radius: var(--r); box-shadow: var(--shadow); }
+    .no-loan-box .icon { font-size: 48px; margin-bottom: 12px; }
+    .no-loan-box p { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .no-loan-box small { color: var(--muted); font-size: 13px; }
+
+    .btn-scan-big { display: inline-flex; align-items: center; gap: 8px; background: var(--navy); color: #fff; border: none; border-radius: 12px; padding: 13px 26px; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 18px; transition: background .2s, transform .15s; }
+    .btn-scan-big:hover { background: var(--navy-light); transform: scale(1.03); }
+
+    /* ═══════════════════════════════════════
+       PROFIL PAGE
+    ═══════════════════════════════════════ */
+    .profil-hero { background: var(--navy); padding: 32px; border-radius: var(--r); box-shadow: var(--shadow-lg); margin-bottom: 24px; display: flex; align-items: center; gap: 20px; }
+    .profil-avatar-lg { width: 68px; height: 68px; border-radius: 50%; background: var(--blue); display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 800; color: #fff; flex-shrink: 0; }
+    .profil-info h2 { color: #fff; font-size: 20px; font-weight: 800; }
+    .profil-info p { color: rgba(255,255,255,.6); font-size: 13px; margin-top: 3px; }
+
+    .riwayat-item { display: flex; justify-content: space-between; align-items: flex-start; padding: 14px 0; border-bottom: 1px solid var(--border); }
+    .riwayat-item:last-child { border-bottom: none; }
+    .riwayat-date { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+    .riwayat-route { font-size: 12px; color: var(--muted); line-height: 1.5; }
+    .riwayat-right { text-align: right; flex-shrink: 0; margin-left: 16px; }
+    .badge-ok { background: var(--green-light); color: var(--green); border-radius: 6px; padding: 3px 8px; font-size: 11px; font-weight: 700; display: inline-block; margin-bottom: 4px; }
+    .riwayat-cost { font-size: 13px; font-weight: 700; color: var(--muted); }
+
+    .setting-row { display: flex; align-items: center; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid var(--border); cursor: pointer; transition: color .15s; }
+    .setting-row:last-child { border-bottom: none; }
+    .setting-row:hover .setting-label { color: var(--blue); }
+    .setting-label { font-size: 14px; font-weight: 500; }
+    .setting-row.danger .setting-label { color: var(--red); font-weight: 700; }
+    .setting-row.danger:hover .setting-label { color: #b91c1c; }
+
+    /* ═══════════════════════════════════════
+       BANTUAN / CS PAGE
+    ═══════════════════════════════════════ */
+    .cs-menu-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 24px; }
+    @media (max-width: 600px) { .cs-menu-grid { grid-template-columns: 1fr; } }
+    .cs-menu-card { background: var(--card); border-radius: var(--r); box-shadow: var(--shadow); padding: 24px 20px; text-align: center; cursor: pointer; transition: box-shadow .2s, transform .2s, border-color .2s; border: 2px solid transparent; }
+    .cs-menu-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); border-color: var(--blue-light); }
+    .cs-menu-icon { font-size: 36px; margin-bottom: 10px; }
+    .cs-menu-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+    .cs-menu-sub { font-size: 12px; color: var(--muted); }
+
+    /* Chat UI */
+    .chat-wrap { display: none; background: var(--card); border-radius: var(--r); box-shadow: var(--shadow); overflow: hidden; }
+    .chat-wrap.visible { display: flex; flex-direction: column; }
+    .chat-header { background: var(--navy); padding: 14px 20px; display: flex; align-items: center; gap: 12px; }
+    .chat-back { background: transparent; border: none; color: rgba(255,255,255,.8); font-size: 20px; cursor: pointer; padding: 0 4px; }
+    .chat-avatar { width: 36px; height: 36px; background: var(--blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .chat-header-info h4 { color: #fff; font-size: 14px; font-weight: 700; }
+    .chat-header-info span { color: rgba(255,255,255,.6); font-size: 11px; }
+    .chat-messages { flex: 1; padding: 20px; overflow-y: auto; max-height: 420px; display: flex; flex-direction: column; gap: 12px; background: #f8fafd; }
+    .msg { max-width: 75%; }
+    .msg-cs { align-self: flex-start; }
+    .msg-user { align-self: flex-end; }
+    .msg-bubble { padding: 10px 14px; border-radius: 14px; font-size: 13.5px; line-height: 1.5; }
+    .msg-cs .msg-bubble { background: var(--card); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+    .msg-user .msg-bubble { background: var(--blue); color: #fff; border-bottom-right-radius: 4px; }
+    .msg-time { font-size: 10.5px; color: var(--muted); margin-top: 4px; }
+    .msg-user .msg-time { text-align: right; }
+    .chat-input-row { border-top: 1px solid var(--border); padding: 14px 16px; display: flex; gap: 10px; }
+    .chat-input { flex: 1; border: 1.5px solid var(--border); border-radius: 10px; padding: 10px 14px; font-size: 14px; outline: none; resize: none; font-family: inherit; }
+    .chat-input:focus { border-color: var(--blue); }
+    .chat-send { background: var(--blue); color: #fff; border: none; border-radius: 10px; padding: 10px 18px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background .15s; flex-shrink: 0; }
+    .chat-send:hover { background: #2563eb; }
+
+    /* Kerusakan form */
+    .kerusakan-form { display: none; }
+    .kerusakan-form.visible { display: block; }
+    .photo-upload-area { border: 2px dashed var(--border); border-radius: var(--r-sm); padding: 32px; text-align: center; cursor: pointer; transition: border-color .2s, background .2s; margin-bottom: 16px; }
+    .photo-upload-area:hover { border-color: var(--blue); background: #f0f7ff; }
+    .photo-upload-area input { display: none; }
+    .upload-icon { font-size: 36px; margin-bottom: 8px; }
+    .upload-text { font-size: 13.5px; color: var(--muted); }
+    .photo-preview { display: none; width: 100%; max-height: 200px; object-fit: cover; border-radius: var(--r-sm); margin-bottom: 12px; }
+
+    .verification-box { background: #fffbeb; border: 1.5px solid #f59e0b; border-radius: var(--r-sm); padding: 16px; margin: 16px 0; display: none; }
+    .verification-box.visible { display: block; }
+    .deduction-box { background: var(--red-light); border: 1.5px solid var(--red); border-radius: var(--r-sm); padding: 16px; margin: 16px 0; display: none; }
+    .deduction-box.visible { display: block; }
+
+    /* ═══════════════════════════════════════
+       SCANNER
+    ═══════════════════════════════════════ */
+    #reader-container { display: none; position: fixed; inset: 0; background: #000; z-index: 9999; flex-direction: column; align-items: center; justify-content: center; }
+    #reader { width: 100% !important; height: 100% !important; border: none !important; }
+    #reader video { object-fit: cover !important; }
+    .scanner-overlay { position: absolute; inset: 0; z-index: 10000; pointer-events: none; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle, transparent 150px, rgba(0,0,0,0.7) 150px); }
+    .scanner-box { width: 260px; height: 260px; border: 4px solid var(--blue); border-radius: 24px; position: relative; box-shadow: 0 0 20px rgba(59,130,246,.5); }
+    .scanner-box::after { content:''; position:absolute; top:0; left:0; width:100%; height:3px; background:var(--blue); box-shadow:0 0 15px var(--blue); animation:scanLine 2s linear infinite; }
+    @keyframes scanLine { 0%{top:0} 50%{top:100%} 100%{top:0} }
+    .btn-close-scanner { position:absolute; top:50px; right:25px; background:#fff; border:none; width:44px; height:44px; border-radius:50%; font-size:22px; z-index:10001; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,.3); }
+
+    /* ═══════════════════════════════════════
+       MODALS
+    ═══════════════════════════════════════ */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(15,30,53,.5); z-index:400; justify-content:center; align-items:center; padding:16px; }
+    .modal-overlay.open { display:flex; }
+    .modal-box { background:var(--card); border-radius:20px; padding:32px; width:100%; max-width:480px; animation:popIn .25s ease; max-height:90vh; overflow-y:auto; position:relative; }
+    @keyframes popIn { from{opacity:0;transform:scale(.95)} to{opacity:1;transform:scale(1)} }
+    .modal-close { position:absolute; top:18px; right:18px; background:var(--bg); border:none; width:32px; height:32px; border-radius:50%; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--muted); }
+    .modal-title { font-size:18px; font-weight:800; margin-bottom:6px; }
+    .modal-sub { font-size:13px; color:var(--muted); margin-bottom:20px; }
+
+    .step-indicator { display:flex; gap:6px; margin-bottom:20px; }
+    .step-dot { width:8px; height:8px; border-radius:50%; background:var(--border); transition:all .3s; }
+    .step-dot.active { background:var(--blue); width:24px; border-radius:4px; }
+    .step-dot.done { background:var(--green); }
+
+    .ewallet-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:20px; }
+    .ew-opt { border:1.5px solid var(--border); border-radius:12px; padding:14px 8px 10px; text-align:center; cursor:pointer; transition:all .15s; background:var(--bg); }
+    .ew-opt:hover { transform:scale(1.04); }
+    .ew-opt.sel { border-color:var(--blue); background:var(--blue-light); }
+    .ew-icon { font-size:26px; margin-bottom:6px; display:block; }
+    .ew-name { font-size:11.5px; font-weight:700; }
+    .ew-opt.sel .ew-name { color:var(--blue); }
+
+    .nom-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:20px; }
+    .nom-opt { border:1.5px solid var(--border); border-radius:10px; padding:12px 6px; text-align:center; font-size:13px; font-weight:700; cursor:pointer; transition:all .15s; background:transparent; color:var(--text); }
+    .nom-opt:hover, .nom-opt.sel { border-color:var(--blue); background:var(--blue-light); color:var(--blue); }
+
+    .pin-inputs { display:flex; gap:10px; justify-content:center; margin-bottom:20px; }
+    .pin-digit { width:44px; height:52px; border:2px solid var(--border); border-radius:10px; text-align:center; font-size:20px; font-weight:800; outline:none; background:var(--bg); transition:border-color .2s; }
+    .pin-digit:focus { border-color:var(--blue); background:#fff; }
+
+    .summary-box { background:var(--bg); border-radius:10px; padding:14px; margin-bottom:18px; }
+    .sum-row { display:flex; justify-content:space-between; padding:5px 0; font-size:13px; }
+    .sum-row:not(:last-child) { border-bottom:1px solid var(--border); padding-bottom:8px; margin-bottom:3px; }
+    .sum-label { color:var(--muted); }
+    .sum-val { font-weight:700; }
+
+    .station-choice { background:var(--card); border:1.5px solid transparent; border-radius:var(--r-sm); box-shadow:var(--shadow); padding:14px 16px; margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; transition:all .15s; }
+    .station-choice:hover { border-color:var(--blue-light); transform:translateX(3px); }
+    .station-choice.sel { border-color:var(--blue); background:#f0f7ff; }
+    .station-check { width:22px; height:22px; border-radius:50%; border:2px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; color:transparent; transition:all .2s; flex-shrink:0; }
+    .station-choice.sel .station-check { border-color:var(--blue); background:var(--blue); color:#fff; }
+
+    .btn-primary { width:100%; background:var(--navy); color:#fff; border:none; border-radius:12px; padding:14px; font-size:14px; font-weight:700; cursor:pointer; transition:background .2s, transform .15s; }
+    .btn-primary:hover { background:var(--navy-light); }
+    .btn-primary:active { transform:scale(.98); }
+    .btn-primary:disabled { background:#94a3b8; cursor:not-allowed; transform:none; }
+    .btn-secondary { width:100%; background:transparent; border:1.5px solid var(--border); border-radius:12px; padding:13px; font-size:14px; font-weight:600; cursor:pointer; color:var(--muted); margin-top:10px; transition:background .15s; }
+    .btn-secondary:hover { background:var(--bg); }
+
+    /* Toast */
+    .toast { position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--navy); color:#fff; padding:11px 22px; border-radius:50px; font-size:13px; font-weight:600; opacity:0; pointer-events:none; transition:opacity .25s,transform .25s; z-index:999; white-space:nowrap; max-width:90%; text-align:center; box-shadow:0 4px 20px rgba(0,0,0,.2); }
+    .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+    /* Misc */
+    .tag-green { background:var(--green-light); color:var(--green); border-radius:6px; padding:3px 8px; font-size:11px; font-weight:700; display:inline-block; }
+    .tag-orange { background:#fff7ed; color:var(--orange); border-radius:6px; padding:3px 8px; font-size:11px; font-weight:700; display:inline-block; }
+
+    /* Mobile bottom nav fallback */
+    .mobile-nav { display:none; position:fixed; bottom:0; left:0; right:0; background:var(--card); border-top:1px solid var(--border); z-index:200; box-shadow:0 -4px 16px rgba(26,43,74,.07); }
+
+    /* ═══════════════════════════════════════
+       AI WEATHER & PREDICTION WIDGET
+       (Ditambahkan untuk fitur AI Payungin)
+    ═══════════════════════════════════════ */
+    .ai-section { margin-bottom: 24px; }
+
+    /* Grid 2 kolom: cuaca + prediksi AI */
+    .ai-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    @media (max-width: 480px) {
+      .ai-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Card cuaca saat ini */
+    .weather-card {
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+      color: #fff;
+      border-radius: var(--r);
+      padding: 18px 20px;
+      box-shadow: var(--shadow-lg);
+      position: relative;
+      overflow: hidden;
+    }
+    .weather-card::before {
+      content: '';
+      position: absolute;
+      top: -30px; right: -30px;
+      width: 100px; height: 100px;
+      background: rgba(255,255,255,.05);
+      border-radius: 50%;
+    }
+    .weather-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      opacity: .7;
+      margin-bottom: 8px;
+    }
+    .weather-icon-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .weather-emoji { font-size: 28px; line-height: 1; }
+    .weather-temp {
+      font-size: 26px;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .weather-desc {
+      font-size: 13px;
+      font-weight: 500;
+      opacity: .85;
+      margin-bottom: 10px;
+    }
+    .weather-rain-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      background: rgba(255,255,255,.12);
+      border-radius: 20px;
+      padding: 4px 10px;
+      width: fit-content;
+    }
+    .rain-bar-wrap {
+      background: rgba(255,255,255,.2);
+      border-radius: 4px;
+      height: 4px;
+      width: 50px;
+      overflow: hidden;
+    }
+    .rain-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: #60a5fa;
+      transition: width .6s ease;
+    }
+
+    /* Card AI Prediction */
+    .ai-pred-card {
+      background: var(--card);
+      border-radius: var(--r);
+      padding: 18px 20px;
+      box-shadow: var(--shadow);
+      border: 1.5px solid var(--blue-light);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .ai-pred-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .ai-badge {
+      display: inline-block;
+      background: var(--blue-light);
+      color: var(--blue);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+    .ai-demand-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 4px 0;
+    }
+    .ai-demand-pill {
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 12px;
+      border-radius: 20px;
+    }
+    .ai-demand-low  { background: var(--green-light);  color: var(--green); }
+    .ai-demand-med  { background: #fff7ed;              color: var(--orange); }
+    .ai-demand-high { background: var(--red-light);     color: var(--red); }
+    .ai-pred-text {
+      font-size: 12.5px;
+      color: var(--text);
+      line-height: 1.55;
+      flex: 1;
+    }
+
+    /* Rekomendasi lokasi */
+    .ai-rec-card {
+      background: var(--card);
+      border-radius: var(--r);
+      padding: 16px 20px;
+      box-shadow: var(--shadow);
+      border: 1.5px solid var(--green-light);
+    }
+    .ai-rec-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .ai-rec-list { display: flex; flex-direction: column; gap: 7px; }
+    .ai-rec-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      padding: 7px 12px;
+      background: #f8fafc;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    .ai-rec-station { font-weight: 600; color: var(--text); }
+    .ai-rec-stock {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--green);
+      background: var(--green-light);
+      padding: 2px 10px;
+      border-radius: 20px;
+    }
+    .ai-rec-empty {
+      font-size: 13px;
+      color: var(--muted);
+      text-align: center;
+      padding: 8px 0;
+    }
+
+    /* Skeleton loading untuk AI widget */
+    .ai-skeleton {
+      background: linear-gradient(90deg, #e2e8f0 25%, #f1f5fb 50%, #e2e8f0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 8px;
+      height: 14px;
+      margin-bottom: 6px;
+    }
+    @keyframes shimmer {
+      0%   { background-position: -200% 0; }
+      100% { background-position:  200% 0; }
+    }
+    @media (max-width: 640px) {
+      .mobile-nav { display:flex; }
+      .topbar-nav { display:none; }
+      #main-app { padding-bottom: 62px; }
+    }
+    .mob-nav-btn { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:10px 4px 8px; border:none; background:transparent; color:var(--muted); font-size:10px; font-weight:600; cursor:pointer; transition:color .2s; }
+    .mob-nav-btn svg { width:20px; height:20px; }
+    .mob-nav-btn.active { color:var(--navy); font-weight:800; }
+    .mob-nav-btn .dot { width:5px; height:5px; border-radius:50%; background:var(--blue); opacity:0; }
+    .mob-nav-btn.active .dot { opacity:1; }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════ AUTH ═══════════════ -->
+<div id="auth-screen" class="visible">
+  <div class="auth-blob"></div>
+  <div class="auth-blob"></div>
+  <div class="auth-card">
+    <div class="auth-logo-row">
+      <div class="auth-logo">
+  <img src="assets/logo-payungin.jpeg"
+       style="width:70px;height:70px;object-fit:contain;">
+</div>
+      <h1>Payungin</h1>
+    </div>
+    <p class="auth-tagline">Pinjam payung, bebas hujan di kampus</p>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuthTab('login')">Masuk</button>
+      <button class="auth-tab" onclick="switchAuthTab('register')">Daftar</button>
+    </div>
+
+    <div class="auth-form active" id="form-login">
+      <div class="f-group">
+        <label class="f-label">Email</label>
+        <input class="f-input" type="text" id="login-email" placeholder="nama@email.com" />
+      </div>
+      <div class="f-group">
+        <label class="f-label">Password</label>
+        <input class="f-input" type="password" id="login-pass" placeholder="Masukkan password" />
+      </div>
+      <button class="btn-auth" onclick="handleLogin()">Masuk</button>
+    </div>
+
+    <div class="auth-form" id="form-register">
+      <div class="f-group">
+        <label class="f-label">Nama Lengkap</label>
+        <input class="f-input" type="text" id="reg-name" placeholder="Nama lengkapmu" />
+      </div>
+      <div class="f-group">
+        <label class="f-label">Email</label>
+        <input class="f-input" type="email" id="reg-email" placeholder="nama@email.com" />
+      </div>
+      <div class="f-group">
+        <label class="f-label">Password</label>
+        <input class="f-input" type="password" id="reg-pass" placeholder="Minimal 6 karakter" />
+      </div>
+      <button class="btn-auth" onclick="handleRegister()">Buat Akun</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ MAIN APP ═══════════════ -->
+<div id="main-app">
+
+  <!-- Topbar -->
+  <nav class="topbar">
+    <div class="topbar-brand">
+      <div class="topbar-logo">
+  <img src="assets/icon-payungin.png"
+       style="width:34px;height:34px;object-fit:contain;">
+</div>
+      Payungin
+    </div>
+    <div class="topbar-nav">
+      <button class="topbar-btn active" id="tnav-home" onclick="switchPage('home')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><polyline points="9 21 9 12 15 12 15 21"/></svg>
+        <span>Beranda</span>
+      </button>
+      <button class="topbar-btn" id="tnav-pinjam" onclick="switchPage('pinjam')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 12a11.05 11.05 0 0 0-22 0zm-5 7a3 3 0 0 1-6 0v-7"/></svg>
+        <span>Peminjaman</span>
+      </button>
+      <button class="topbar-btn" id="tnav-profil" onclick="switchPage('profil')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Profil</span>
+      </button>
+      <button class="topbar-btn" id="tnav-bantuan" onclick="switchPage('bantuan')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+            <circle cx="12" cy="17" r="1"/>
+        </svg>
+        <span>Bantuan</span>
+      </button>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-saldo" id="topbar-saldo">Rp 0</div>
+      <div class="topbar-avatar" id="topbar-avatar">U</div>
+      <button class="topbar-logout" onclick="handleLogout()">Keluar</button>
+    </div>
+  </nav>
+
+  <!-- ══ HOME PAGE ══ -->
+  <div class="page active" id="page-home">
+    <div class="home-hero">
+      <div class="home-hero-inner">
+        <div>
+          <h2 id="hero-greeting">Halo! 👋</h2>
+          <p>Siap hadapi hujan hari ini?</p>
+        </div>
+        <div class="hero-saldo-card">
+          <div>
+            <div class="hero-saldo-label">Saldo Deposit</div>
+            <div class="hero-saldo-amount" id="saldo-display">Rp 0</div>
+          </div>
+          <button class="btn-topup-hero" onclick="openModal('modal-topup')">Top Up</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="grid-2" style="margin-bottom:28px;">
+        <div class="qr-scan-card" onclick="openBorrowPicker()">
+          <div class="qr-ring">
+            <div class="qr-inner">
+              <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="5" height="5"/><rect x="16" y="3" width="5" height="5"/><rect x="3" y="16" width="5" height="5"/>
+                <line x1="16" y1="11" x2="21" y2="11"/><line x1="21" y1="11" x2="21" y2="16"/>
+                <line x1="16" y1="16" x2="16" y2="21"/><line x1="16" y1="21" x2="21" y2="21"/>
+                <line x1="11" y1="3" x2="11" y2="8"/><line x1="8" y1="11" x2="11" y2="11"/>
+                <line x1="11" y1="16" x2="11" y2="21"/>
+              </svg>
+            </div>
+          </div>
+          <div class="qr-card-label">Scan QR Station</div>
+          <div class="qr-card-sub">Arahkan kamera ke stasiun Payungin</div>
+        </div>
+
+        <div class="card" style="display:flex;flex-direction:column;gap:10px;">
+          <div style="font-size:15px;font-weight:700;margin-bottom:4px;">Pinjaman Aktif Saya</div>
+          <div id="home-loan-summary">
+            <div style="color:var(--muted);font-size:13px;padding:12px 0;">Tidak ada pinjaman aktif.</div>
+          </div>
+          <button class="btn-scan-big" style="align-self:flex-start" onclick="openBorrowPicker()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 12a11.05 11.05 0 0 0-22 0zm-5 7a3 3 0 0 1-6 0v-7"/></svg>
+            Pinjam Payung
+          </button>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════
+           AI WEATHER & PREDICTION SECTION
+           Menampilkan cuaca + prediksi AI
+      ══════════════════════════════════ -->
+      <div class="ai-section">
+        <div class="sec-title" style="margin-bottom:12px;">🤖 Smart Weather & Demand Prediction</div>
+
+        <!-- Grid: Cuaca Saat Ini + AI Prediction Card -->
+        <div class="ai-grid">
+
+          <!-- Card 1: Cuaca Saat Ini dari Open-Meteo API -->
+          <div class="weather-card" id="weather-card">
+            <div class="weather-label">☁️ Cuaca Hari Ini</div>
+            <div class="weather-icon-row">
+              <div class="weather-emoji" id="w-emoji">⏳</div>
+              <div class="weather-temp" id="w-temp">--°C</div>
+            </div>
+            <div class="weather-desc" id="w-desc">Memuat data cuaca...</div>
+            <div class="weather-rain-row">
+              <span>💧</span>
+              <span id="w-rain-pct">--%</span>
+              <div class="rain-bar-wrap">
+                <div class="rain-bar-fill" id="w-rain-bar" style="width:0%"></div>
+              </div>
+              <span style="opacity:.7; font-size:11px;">Peluang Hujan</span>
+            </div>
+          </div>
+
+          <!-- Card 2: AI Prediction – hasil analisis model sederhana berbasis aturan -->
+          <div class="ai-pred-card">
+            <div class="ai-pred-label">
+              <span>🤖 Prediksi AI</span>
+              <span class="ai-badge">Smart Analytics</span>
+            </div>
+            <div class="ai-demand-row">
+              <span style="font-size:12px; color:var(--muted); font-weight:500;">Permintaan Payung:</span>
+              <span class="ai-demand-pill" id="ai-demand-pill">...</span>
+            </div>
+            <div class="ai-pred-text" id="ai-pred-text">
+              <div class="ai-skeleton" style="width:90%"></div>
+              <div class="ai-skeleton" style="width:70%"></div>
+              <div class="ai-skeleton" style="width:80%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: Rekomendasi Lokasi dengan Stok Tersedia -->
+        <div class="ai-rec-card" id="ai-rec-card">
+          <div class="ai-rec-title">
+            ☂️ Rekomendasi Lokasi
+            <span class="ai-badge" style="background:#dcfce7; color:var(--green);">Tersedia</span>
+          </div>
+          <div class="ai-rec-list" id="ai-rec-list">
+            <div class="ai-rec-empty">Memuat rekomendasi...</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec-title">Daftar Station</div>
+      <div class="grid-2" id="station-list-home">
+        <div style="color:var(--muted);font-size:13px;padding:16px 0;grid-column:span 2;">Memuat data station...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PEMINJAMAN PAGE ══ -->
+  <div class="page" id="page-pinjam">
+    <div class="page-banner"><h2>Peminjaman Aktif</h2></div>
+    <div class="container-sm">
+      <div id="loans-container"></div>
+      <div id="no-loan-box" class="no-loan-box" style="display:none;">
+        <div class="icon">
+  <img src="assets/icon-payungin.png"
+       style="width:70px;height:70px;object-fit:contain;">
+</div>
+        <p>Tidak ada peminjaman aktif</p>
+        <small>Scan QR di station terdekat untuk mulai meminjam</small>
+        <br>
+        <button class="btn-scan-big" onclick="openBorrowPicker()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 12a11.05 11.05 0 0 0-22 0zm-5 7a3 3 0 0 1-6 0v-7"/></svg>
+          Pinjam Payung
+        </button>
+      </div>
+      <div id="add-loan-btn-wrap" style="margin-top:14px;display:none;">
+        <button class="btn-scan-big" onclick="openBorrowPicker()">+ Pinjam Payung Lagi</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PROFIL PAGE ══ -->
+  <div class="page" id="page-profil">
+    <div class="container-sm">
+      <div class="profil-hero">
+        <div class="profil-avatar-lg" id="profil-avatar">U</div>
+        <div class="profil-info">
+          <h2 id="profil-name">-</h2>
+          <p id="profil-email">-</p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="sec-title" style="font-size:16px;">Riwayat Peminjaman</div>
+          <div id="riwayat-list">
+            <!-- Diisi oleh renderRiwayat() dari API -->
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="sec-title" style="font-size:16px;">Pengaturan</div>
+          <div class="setting-row" onclick="openModal('modal-topup')">
+            <span class="setting-label">Top Up Saldo</span>
+            <span style="color:var(--muted)">›</span>
+          </div>
+          <div class="setting-row" onclick="openModal('modal-refund')">
+            <span class="setting-label">Tarik Deposit / Refund</span>
+            <span style="color:var(--muted)">›</span>
+          </div>
+          <div class="setting-row danger" onclick="handleLogout()">
+            <span class="setting-label">Keluar Akun</span>
+            <span style="color:var(--red)">›</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Riwayat Laporan Kerusakan -->
+      <div class="card" style="margin-top:16px;">
+        <div class="sec-title" style="font-size:16px;">Riwayat Laporan Kerusakan</div>
+        <div id="riwayat-laporan-list">
+          <!-- Diisi oleh renderRiwayatLaporan() dari API -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ BANTUAN PAGE ══ -->
+  <div class="page" id="page-bantuan">
+    <div class="page-banner"><h2>Pusat Bantuan</h2></div>
+    <div class="container-sm">
+      <div id="cs-menu">
+        <div class="cs-menu-grid" style="grid-template-columns:repeat(2,1fr);">
+          <div class="cs-menu-card" onclick="openLaporanKerusakan()">
+            <div class="cs-menu-icon">🔧</div>
+            <div class="cs-menu-title">Laporan Payung Rusak / Hilang</div>
+            <div class="cs-menu-sub">Laporkan payung rusak atau hilang</div>
+          </div>
+          <div class="cs-menu-card" onclick="openLiveChat()">
+            <div class="cs-menu-icon">💬</div>
+            <div class="cs-menu-title">Chat Customer Service</div>
+            <div class="cs-menu-sub">Hubungi CS Payungin langsung</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Laporan Kerusakan -->
+      <div id="kerusakan-section" class="kerusakan-form">
+        <button onclick="backToCSMenu()" style="background:transparent;border:none;color:var(--blue);font-size:14px;font-weight:700;cursor:pointer;margin-bottom:16px;display:flex;align-items:center;gap:6px;">← Kembali</button>
+        <div class="card">
+          <div class="sec-title">Laporan Payung Rusak / Hilang</div>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Pilih jenis laporan dan upload foto sebagai bukti.</p>
+
+          <!-- Pilih Payung dari pinjaman aktif -->
+          <div class="f-group">
+            <label class="f-label">Pilih Payung yang Dilaporkan</label>
+            <select class="f-input" id="laporan-payung-select" onchange="checkLaporanReady()" style="background:var(--bg);">
+              <option value="">-- Memuat daftar payung --</option>
+            </select>
+            <div id="laporan-no-loan" style="display:none;font-size:12px;color:var(--red);margin-top:4px;">
+              ⚠️ Tidak ada pinjaman aktif. Laporan hanya bisa dikirim saat meminjam payung.
+            </div>
+          </div>
+
+          <!-- Pilih jenis laporan -->
+          <div class="f-group">
+            <label class="f-label">Jenis Laporan</label>
+            <div style="display:flex;gap:10px;margin-top:4px;">
+              <label style="flex:1;cursor:pointer;">
+                <input type="radio" name="reportType" value="rusak" id="type-rusak" checked style="display:none;" onchange="updateLaporanType()">
+                <div class="report-type-opt" id="opt-rusak" style="border:2px solid var(--blue);background:var(--blue-light);border-radius:10px;padding:12px;text-align:center;font-weight:700;font-size:13px;color:var(--blue);">🔧 Payung Rusak</div>
+              </label>
+              <label style="flex:1;cursor:pointer;">
+                <input type="radio" name="reportType" value="hilang" id="type-hilang" style="display:none;" onchange="updateLaporanType()">
+                <div class="report-type-opt" id="opt-hilang" style="border:2px solid var(--border);background:var(--bg);border-radius:10px;padding:12px;text-align:center;font-weight:700;font-size:13px;color:var(--muted);">🚫 Payung Hilang</div>
+              </label>
+            </div>
+          </div>
+
+          <div class="photo-upload-area" onclick="document.getElementById('photo-input').click()">
+            <input type="file" id="photo-input" accept="image/*" onchange="handlePhotoUpload(event)" />
+            <div class="upload-icon">📸</div>
+            <div class="upload-text" id="upload-text-label">Klik untuk memilih foto payung yang rusak</div>
+          </div>
+          <img id="photo-preview" class="photo-preview" alt="Preview" />
+
+          <div class="f-group">
+            <label class="f-label" id="desc-label">Deskripsi Kerusakan</label>
+            <textarea class="f-input" id="rusak-desc" rows="3" placeholder="Ceritakan kerusakan yang terjadi..." style="resize:none;" oninput="checkLaporanReady()"></textarea>
+          </div>
+
+          <!-- Disclaimer — sesuai poin 10 -->
+          <div style="background:#fff7ed;border:1.5px solid #fdba74;border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:12px;color:#92400e;line-height:1.6;">
+            ⚠️ Dengan mengirim laporan ini, Anda memahami bahwa apabila laporan disetujui admin dan dikenakan denda, <strong>saldo deposit akan dipotong otomatis</strong> sesuai hasil verifikasi. Denda kerusakan atau kehilangan memiliki nominal minimal <strong>Rp20.000</strong> dan dapat lebih besar sesuai tingkat kerusakan atau kehilangan yang terjadi.
+          </div>
+
+          <button class="btn-primary" id="btn-kirim-laporan" onclick="kirimLaporanKerusakan()" disabled>Kirim Laporan</button>
+
+          <!-- Waiting verification -->
+          <div class="verification-box" id="verify-waiting">
+            <strong>⏳ Laporan Terkirim</strong>
+            <p style="font-size:13px;margin-top:6px;">Laporan kamu sedang diverifikasi oleh admin. Harap tunggu 1x24 jam. Cek status di halaman <strong>Profil → Riwayat Laporan</strong>.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat CS -->
+      <div id="chat-section">
+        <div class="chat-wrap" id="chat-box">
+          <div class="chat-header">
+            <button class="chat-back" onclick="backToCSMenu()">←</button>
+            <div class="chat-avatar">🎧</div>
+            <div class="chat-header-info">
+              <h4>CS Payungin</h4>
+              <span>● Online</span>
+            </div>
+          </div>
+          <div class="chat-messages" id="chat-messages"></div>
+          <div class="chat-input-row">
+            <textarea class="chat-input" id="chat-input" rows="1" placeholder="Ketik pesan..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}"></textarea>
+            <button class="chat-send" onclick="sendChat()">Kirim</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile nav -->
+  <nav class="mobile-nav">
+    <button class="mob-nav-btn active" id="mnav-home" onclick="switchPage('home')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><polyline points="9 21 9 12 15 12 15 21"/></svg>
+      Beranda<div class="dot"></div>
+    </button>
+    <button class="mob-nav-btn" id="mnav-pinjam" onclick="switchPage('pinjam')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 12a11.05 11.05 0 0 0-22 0zm-5 7a3 3 0 0 1-6 0v-7"/></svg>
+      Pinjaman<div class="dot"></div>
+    </button>
+    <button class="mob-nav-btn" id="mnav-profil" onclick="switchPage('profil')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Profil<div class="dot"></div>
+    </button>
+    <button class="mob-nav-btn" id="mnav-bantuan" onclick="switchPage('bantuan')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+        <circle cx="12" cy="17" r="1"/>
+      </svg>
+      Bantuan<div class="dot"></div>
+    </button>
+  </nav>
+</div>
+
+<!-- ═══════════════ SCANNER ═══════════════ -->
+<div id="reader-container">
+  <button class="btn-close-scanner" onclick="stopScanner()">×</button>
+  <div id="reader"></div>
+  <div class="scanner-overlay">
+    <div class="scanner-box"></div>
+    <p style="color:#fff;margin-top:24px;font-weight:700;text-shadow:0 2px 4px rgba(0,0,0,.5)">Arahkan ke QR Code Stasiun</p>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: KEMBALIKAN ═══════════════ -->
+<div class="modal-overlay" id="modal-kembalikan" onclick="closeModalOutside(event,'modal-kembalikan')">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('modal-kembalikan')">×</button>
+    <div class="modal-title">Kembalikan Payung</div>
+    <!-- Banner peringatan payung rusak — hanya tampil jika laporan rusak sudah disetujui -->
+    <div id="kembalikan-damage-banner" style="display:none;background:#fff7ed;border:1.5px solid #fdba74;border-radius:10px;padding:11px 14px;margin:10px 0;font-size:12px;color:#92400e;line-height:1.6;">
+      🔧 <strong>Payung ini telah dilaporkan rusak.</strong><br>
+      Denda sudah dipotong otomatis dari saldo deposit Anda oleh admin.<br>
+      Silakan lanjutkan proses pengembalian payung. <strong>Tidak ada biaya tambahan.</strong>
+    </div>
+    <div class="modal-sub" id="kembalikan-sub">Pilih station pengembalian</div>
+    <div id="kembalikan-station-list">
+      <div style="color:var(--muted);font-size:13px;padding:16px 0;text-align:center;">Memuat daftar station...</div>
+    </div>
+    <div class="summary-box" id="kembalikan-summary" style="display:none;margin-top:14px;">
+      <div class="sum-row"><span class="sum-label">Payung</span><span class="sum-val" id="kem-payung-id">-</span></div>
+      <div class="sum-row"><span class="sum-label">Station tujuan</span><span class="sum-val" id="kem-station-name">-</span></div>
+      <div class="sum-row" id="kem-biaya-row"><span class="sum-label">Biaya sewa</span><span class="sum-val" id="kem-biaya-val">Rp 3.000</span></div>
+    </div>
+    <button class="btn-primary" id="btn-konfirmasi-kembali" onclick="confirmKembalikan()" disabled style="margin-top:14px;">Konfirmasi Pengembalian</button>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: TOP UP ═══════════════ -->
+<div class="modal-overlay" id="modal-topup" onclick="closeModalOutside(event,'modal-topup')">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('modal-topup')">×</button>
+
+    <!-- Step 1: Pilih Nominal -->
+    <div id="tu-s1">
+      <div class="step-indicator"><div class="step-dot active"></div><div class="step-dot"></div></div>
+      <div class="modal-title">Top Up Saldo</div>
+      <div class="modal-sub">Bayar pakai QRIS — GoPay, OVO, DANA, ShopeePay, Mobile Banking, dll</div>
+
+      <!-- Ikon QRIS provider -->
+      <div style="display:flex;gap:8px;justify-content:center;margin-bottom:18px;flex-wrap:wrap;">
+        <span style="font-size:11px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:5px 10px;font-weight:700;color:var(--muted);">💚 GoPay</span>
+        <span style="font-size:11px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:5px 10px;font-weight:700;color:var(--muted);">💜 OVO</span>
+        <span style="font-size:11px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:5px 10px;font-weight:700;color:var(--muted);">💙 DANA</span>
+        <span style="font-size:11px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:5px 10px;font-weight:700;color:var(--muted);">🧡 ShopeePay</span>
+        <span style="font-size:11px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:5px 10px;font-weight:700;color:var(--muted);">🏦 M-Banking</span>
+      </div>
+
+      <div class="nom-grid">
+        <button class="nom-opt" onclick="selNom(this,10000,'tu')">Rp 10.000</button>
+        <button class="nom-opt" onclick="selNom(this,20000,'tu')">Rp 20.000</button>
+        <button class="nom-opt" onclick="selNom(this,25000,'tu')">Rp 25.000</button>
+        <button class="nom-opt" onclick="selNom(this,50000,'tu')">Rp 50.000</button>
+        <button class="nom-opt" onclick="selNom(this,100000,'tu')">Rp 100.000</button>
+        <button class="nom-opt" onclick="selNom(this,200000,'tu')">Rp 200.000</button>
+      </div>
+
+      <!-- Input nominal custom -->
+      <div class="f-group" style="margin-bottom:18px;">
+        <label class="f-label">Atau masukkan nominal lain</label>
+        <input class="f-input" type="number" id="tu-custom" placeholder="Min Rp 10.000 · Maks Rp 1.000.000"
+          oninput="tuCustomInput()" />
+      </div>
+
+      <button class="btn-primary" id="tu-btn1" onclick="tuGoQris()" disabled>Generate QRIS →</button>
+    </div>
+
+    <!-- Step 2: Konfirmasi sebelum generate -->
+    <div id="tu-s2" style="display:none;">
+      <div class="step-indicator"><div class="step-dot done"></div><div class="step-dot active"></div></div>
+      <div class="modal-title">Konfirmasi Top Up</div>
+      <div class="modal-sub">Pastikan nominal sudah benar sebelum generate QRIS</div>
+      <div class="summary-box">
+        <div class="sum-row"><span class="sum-label">Metode</span><span class="sum-val">QRIS Universal</span></div>
+        <div class="sum-row"><span class="sum-label">Nominal</span><span class="sum-val" id="tu-sum-nom">-</span></div>
+        <div class="sum-row" style="border-top:1.5px solid var(--border);padding-top:10px;margin-top:6px;">
+          <span class="sum-label" style="font-weight:800;">Total Bayar</span>
+          <span class="sum-val" id="tu-sum-total" style="font-weight:800;color:var(--blue);">-</span>
+        </div>
+      </div>
+      <div style="background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:12px;padding:12px;margin-bottom:16px;font-size:12px;color:#166534;">
+        ✅ QRIS berlaku 15 menit · Scan dengan aplikasi e-wallet atau m-banking apapun
+      </div>
+      <button class="btn-primary" id="tu-btn2" onclick="confirmTopup()">Buat QRIS & Bayar</button>
+      <button class="btn-secondary" onclick="tuShowStep(1)">← Ubah Nominal</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: REFUND ═══════════════ -->
+<div class="modal-overlay" id="modal-refund" onclick="closeModalOutside(event,'modal-refund')">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('modal-refund')">×</button>
+    <!-- Step 1 -->
+    <div id="rf-s1">
+      <div class="step-indicator"><div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div></div>
+      <div class="modal-title">Tarik Deposit</div>
+      <div class="modal-sub">Pilih rekening tujuan</div>
+      <div class="ewallet-grid">
+        <div class="ew-opt" onclick="selEw(this,'GoPay','rf')"><span class="ew-icon">💚</span><span class="ew-name">GoPay</span></div>
+        <div class="ew-opt" onclick="selEw(this,'OVO','rf')"><span class="ew-icon">💜</span><span class="ew-name">OVO</span></div>
+        <div class="ew-opt" onclick="selEw(this,'DANA','rf')"><span class="ew-icon">💙</span><span class="ew-name">DANA</span></div>
+        <div class="ew-opt" onclick="selEw(this,'ShopeePay','rf')"><span class="ew-icon">🧡</span><span class="ew-name">ShopeePay</span></div>
+        <div class="ew-opt" onclick="selEw(this,'LinkAja','rf')"><span class="ew-icon">❤️</span><span class="ew-name">LinkAja</span></div>
+        <div class="ew-opt" onclick="selEw(this,'BCA Mobile','rf')"><span class="ew-icon">🏦</span><span class="ew-name">BCA Mobile</span></div>
+      </div>
+      <button class="btn-primary" id="rf-btn1" onclick="rfGo(2)" disabled>Lanjut →</button>
+    </div>
+    <!-- Step 2 -->
+    <div id="rf-s2" style="display:none;">
+      <div class="step-indicator"><div class="step-dot done"></div><div class="step-dot active"></div><div class="step-dot"></div></div>
+      <div class="modal-title">Nomor <span id="rf-ew-lbl">GoPay</span></div>
+      <div class="modal-sub">Masukkan nomor yang terdaftar</div>
+      <div class="f-group"><label class="f-label">Nomor HP / Akun</label><input class="f-input" type="tel" id="rf-phone" placeholder="08xx-xxxx-xxxx" /></div>
+      <button class="btn-primary" onclick="rfGo(3)" style="margin-bottom:0">Lanjut →</button>
+      <button class="btn-secondary" onclick="rfGo(1)">← Kembali</button>
+    </div>
+    <!-- Step 3 -->
+    <div id="rf-s3" style="display:none;">
+      <div class="step-indicator"><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot active"></div></div>
+      <div class="modal-title">Pilih Nominal</div>
+      <div class="modal-sub">Saldo tersedia: <strong id="rf-saldo-lbl">Rp 0</strong></div>
+      <div class="nom-grid" id="rf-nom-grid"></div>
+      <div class="f-group" style="margin-bottom:16px;">
+        <label class="f-label">Atau masukkan nominal lain</label>
+        <input class="f-input" type="number" id="rf-custom" placeholder="Min Rp 5.000" oninput="rfCustomInput()" />
+      </div>
+      <div class="summary-box">
+        <div class="sum-row"><span class="sum-label">Rekening tujuan</span><span class="sum-val" id="rf-sum-ew">-</span></div>
+        <div class="sum-row"><span class="sum-label">Nomor</span><span class="sum-val" id="rf-sum-phone">-</span></div>
+        <div class="sum-row"><span class="sum-label">Jumlah ditarik</span><span class="sum-val" id="rf-sum-amount">-</span></div>
+      </div>
+      <button class="btn-primary" id="rf-btn3" onclick="confirmRefund()" disabled>Konfirmasi Penarikan</button>
+      <button class="btn-secondary" onclick="rfGo(2)">← Kembali</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════
+//  GLOBALS
+// ══════════════════════════════════
+let currentUser = null;
+let toastTimeout;
+let uploadedDamagePhoto = null;
+let html5QrCode = null;
+let timerIntervals = {};   // { loanId: intervalId }
+let tu = { amount: 0 };
+let rf = { ew:'', phone:'', amount:0 };
+let currentKembalikanId = null;
+let selectedReturnStation = null;
+let chatMode = '';
+let csResponses = 0;
+
+let _allStations = []; // will be populated from API
+
+// ══════════════════════════════════════════════════════
+//  AI WEATHER & UMBRELLA DEMAND PREDICTION MODULE
+//  Menggunakan Open-Meteo API (gratis, tanpa API key)
+//  Lokasi default: IPB University, Bogor, Indonesia
+// ══════════════════════════════════════════════════════
+
+/**
+ * ALGORITMA AI PREDIKSI PERMINTAAN PAYUNG
+ * Model berbasis aturan (rule-based) yang mengelompokkan
+ * kondisi cuaca menjadi 3 level kebutuhan: Rendah, Sedang, Tinggi.
+ *
+ * Input  : rainProbability (0-100), weatherCode (WMO code)
+ * Output : { level, label, message }
+ *
+ * Aturan:
+ *   - Hujan > 70% ATAU kode cuaca hujan  → Tinggi
+ *   - Hujan 40–70%                        → Sedang
+ *   - Hujan < 40%                         → Rendah
+ */
+function runAIPrediction(rainPct, weatherCode) {
+  // WMO weather codes yang tergolong hujan (51–99)
+  const isRainyCode = weatherCode >= 51 && weatherCode <= 99;
+
+  let level, label, message;
+
+  if (rainPct > 70 || isRainyCode) {
+    level   = 'high';
+    label   = 'Tinggi';
+    message = 'Risiko hujan tinggi dalam 2 jam ke depan. AI merekomendasikan agar Anda menyiapkan payung sebelum berpindah gedung.';
+  } else if (rainPct >= 40) {
+    level   = 'medium';
+    label   = 'Sedang';
+    message = 'Potensi hujan cukup signifikan. Disarankan meminjam payung sebagai antisipasi, terutama saat sore hari.';
+  } else {
+    level   = 'low';
+    label   = 'Rendah';
+    message = 'Cuaca relatif aman. Risiko hujan rendah dalam beberapa jam ke depan. Nikmati aktivitas kampus Anda!';
+  }
+
+  return { level, label, message };
+}
+
+/**
+ * Menerjemahkan WMO Weather Code ke teks & emoji Indonesia
+ */
+function decodeWeatherCode(code) {
+  if (code === 0)            return { desc: 'Cerah Berawan',   emoji: '☀️' };
+  if (code <= 2)             return { desc: 'Sebagian Berawan', emoji: '⛅' };
+  if (code === 3)            return { desc: 'Mendung',          emoji: '☁️' };
+  if (code <= 49)            return { desc: 'Kabut / Berkabut', emoji: '🌫️' };
+  if (code <= 57)            return { desc: 'Gerimis',          emoji: '🌦️' };
+  if (code <= 67)            return { desc: 'Hujan Ringan',     emoji: '🌧️' };
+  if (code <= 77)            return { desc: 'Hujan Es',         emoji: '🌨️' };
+  if (code <= 82)            return { desc: 'Hujan Deras',      emoji: '⛈️' };
+  if (code <= 99)            return { desc: 'Badai Petir',      emoji: '🌩️' };
+  return { desc: 'Tidak Diketahui', emoji: '🌡️' };
+}
+
+/**
+ * Mengambil data cuaca dari Open-Meteo (gratis, no API key)
+ * Default koordinat: IPB University Bogor (-6.5607, 106.7285)
+ * Bisa diganti ke koordinat kampus masing-masing
+ */
+async function fetchWeatherData(lat = -6.5607, lon = 106.7285) {
+  const url = `https://api.open-meteo.com/v1/forecast`
+    + `?latitude=${lat}&longitude=${lon}`
+    + `&current=temperature_2m,weathercode,precipitation_probability`
+    + `&hourly=precipitation_probability`
+    + `&timezone=Asia%2FJakarta&forecast_days=1`;
+
+  const res  = await fetch(url, { signal: AbortSignal.timeout(8000) });
+  if (!res.ok) throw new Error('Gagal fetch cuaca');
+  return res.json();
+}
+
+/**
+ * Render rekomendasi lokasi station berdasarkan stok payung
+ * Menampilkan station yang masih punya stok (available > 0)
+ */
+function renderAIRecommendations(stations) {
+  const list = document.getElementById('ai-rec-list');
+  if (!list) return;
+
+  // Gunakan field "availableCount" — field yang sama dengan renderStationsHome()
+  // sehingga card AI dan section Daftar Station selalu sinkron dari sumber data yang sama
+  const totalStock = stations.reduce((sum, s) =>
+    sum + (s.availableCount || 0), 0);
+
+  // Pesan stok habis HANYA muncul jika totalStock benar-benar 0
+  if (totalStock === 0) {
+    list.innerHTML = `<div class="ai-rec-empty">⚠️ Stok payung sedang habis di semua station. Silakan cek kembali nanti.</div>`;
+    return;
+  }
+
+  // Filter station yang punya stok > 0, urutkan dari stok terbanyak, max 3
+  const available = stations
+    .filter(s => (s.availableCount || 0) > 0)
+    .sort((a, b) => (b.availableCount || 0) - (a.availableCount || 0))
+    .slice(0, 3);
+
+  list.innerHTML = available.map(s => {
+    const stock = s.availableCount || 0;
+    return `
+      <div class="ai-rec-item">
+        <span class="ai-rec-station">📍 ${s.name}</span>
+        <span class="ai-rec-stock">${stock} tersedia</span>
+      </div>`;
+  }).join('');
+}
+
+/**
+ * FUNGSI UTAMA: Inisialisasi AI Weather Widget
+ * Dipanggil saat user berhasil login (enterApp)
+ */
+async function initAIWeather() {
+  // --- Data fallback jika API gagal (untuk keperluan demo) ---
+  const FALLBACK = {
+    temp: 28, rainPct: 75, weatherCode: 61,
+    desc: 'Hujan Ringan', emoji: '🌧️'
+  };
+
+  try {
+    const data = await fetchWeatherData();
+    const cur  = data.current;
+
+    const temp     = Math.round(cur.temperature_2m || FALLBACK.temp);
+    const rainPct  = cur.precipitation_probability ?? FALLBACK.rainPct;
+    const wCode    = cur.weathercode ?? FALLBACK.weatherCode;
+    const { desc, emoji } = decodeWeatherCode(wCode);
+
+    // Update UI cuaca
+    document.getElementById('w-emoji').textContent    = emoji;
+    document.getElementById('w-temp').textContent     = `${temp}°C`;
+    document.getElementById('w-desc').textContent     = desc;
+    document.getElementById('w-rain-pct').textContent = `${rainPct}%`;
+    document.getElementById('w-rain-bar').style.width = `${rainPct}%`;
+
+    // Jalankan model AI prediksi
+    const ai = runAIPrediction(rainPct, wCode);
+
+    // Update UI prediksi AI
+    const pill = document.getElementById('ai-demand-pill');
+    pill.textContent  = `Prediksi: ${ai.label}`;
+    pill.className    = `ai-demand-pill ai-demand-${
+      ai.level === 'high' ? 'high' : ai.level === 'medium' ? 'med' : 'low'
+    }`;
+    document.getElementById('ai-pred-text').textContent = ai.message;
+
+  } catch (err) {
+    // Fallback: tampilkan data demo agar dashboard tetap bisa didemokan
+    console.warn('[AI Weather] Fallback ke data demo:', err.message);
+    const { desc, emoji } = decodeWeatherCode(FALLBACK.weatherCode);
+
+    document.getElementById('w-emoji').textContent    = emoji;
+    document.getElementById('w-temp').textContent     = `${FALLBACK.temp}°C`;
+    document.getElementById('w-desc').textContent     = desc;
+    document.getElementById('w-rain-pct').textContent = `${FALLBACK.rainPct}%`;
+    document.getElementById('w-rain-bar').style.width = `${FALLBACK.rainPct}%`;
+
+    const ai   = runAIPrediction(FALLBACK.rainPct, FALLBACK.weatherCode);
+    const pill = document.getElementById('ai-demand-pill');
+    pill.textContent = `Prediksi: ${ai.label}`;
+    pill.className   = `ai-demand-pill ai-demand-high`;
+    document.getElementById('ai-pred-text').textContent = ai.message + ' (Data demo – API sedang tidak tersedia)';
+  }
+
+  // Rekomendasi lokasi ditangani oleh loadAndRenderStations()
+  // Tidak perlu setTimeout — loadAndRenderStations sudah memanggil renderAIRecommendations
+}
+
+// ── Expose agar bisa dipanggil ulang setelah station data diperbarui ──
+
+function fmt(n){ return new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',minimumFractionDigits:0}).format(n); }
+function now(){ return new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}); }
+
+// ══════════════════════════════════
+//  BOOT
+// ══════════════════════════════════
+(function init(){
+  const saved = localStorage.getItem('payungin_user');
+  if(saved){ currentUser=JSON.parse(saved); enterApp(); }
+  else { document.getElementById('auth-screen').classList.add('visible'); }
+})();
+
+// ══════════════════════════════════
+//  API HELPER
+// ══════════════════════════════════
+const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? 'http://localhost:3000/api'
+  : `http://${window.location.hostname}:3000/api`;
+
+function getToken(){ return localStorage.getItem('token'); }
+
+async function apiRequest(method, endpoint, body = null){
+  const opts = {
+    method,
+    headers: {
+      'Authorization': 'Bearer ' + getToken()
+    }
+  };
+
+  if(body){
+    if(body instanceof FormData){
+      opts.body = body;
+    } else {
+      opts.headers['Content-Type'] = 'application/json';
+      opts.body = JSON.stringify(body);
+    }
+  }
+
+  const res = await fetch(API_BASE + endpoint, opts);
+  const data = await res.json();
+
+  if(!res.ok){
+    throw new Error(data.message || 'Request gagal');
+  }
+
+  return data;
+}
+
+// getUD sekarang hanya membaca currentUser (tidak lagi dari localStorage dummy)
+// Dipakai oleh fungsi-fungsi lama yang masih belum di-refactor total (refund nominal, dll)
+function getUD(){
+  return {
+    saldo: currentUser ? (currentUser.saldo || 0) : 0,
+    loans: []   // loans aktif ditangani oleh renderLoans() via API
+  };
+}
+// saveUD tidak lagi menyimpan ke localStorage — update currentUser.saldo langsung
+function saveUD(d){
+  if(currentUser && d.saldo !== undefined){
+    currentUser.saldo = d.saldo;
+    localStorage.setItem('payungin_user', JSON.stringify(currentUser));
+  }
+}
+
+
+// ══════════════════════════════════
+//  AUTH
+// ══════════════════════════════════
+function switchAuthTab(tab){
+  document.querySelectorAll('.auth-tab').forEach((t,i)=>t.classList.toggle('active',(tab==='login'&&i===0)||(tab==='register'&&i===1)));
+  document.getElementById('form-login').classList.toggle('active',tab==='login');
+  document.getElementById('form-register').classList.toggle('active',tab==='register');
+}
+async function handleLogin() {
+  console.log("LOGIN FUNCTION BARU JALAN");
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-pass').value;
+
+  if (!email || !pass) {
+    showToast('Isi email dan password dulu!');
+    return;
+  }
+
+  try {
+    const response = await fetch(API_BASE + '/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        email,
+        password: pass
+      })
+    });
+
+    const data = await response.json();
+    console.log(data);
+
+    if (!response.ok) {
+      showToast(data.message || 'Login gagal!');
+      return;
+    }
+
+    // simpan token
+    localStorage.setItem('token', data.data.token);
+    localStorage.setItem('payungin_token', data.data.token);
+
+    // Redirect admin ke dashboard admin
+    if (data.data.user.role === 'admin') {
+      window.location.href = 'admin.html';
+      return;
+    }
+
+    // simpan user
+    console.log(data.user);
+    currentUser = {
+      name: data.data.user.name,
+      email: data.data.user.email,
+      saldo: data.data.user.saldo
+    };
+    localStorage.setItem('payungin_user', JSON.stringify(currentUser));
+
+    showToast('Login berhasil!');
+
+    enterApp();
+
+  } 
+  catch(error) {
+  console.error("LOGIN ERROR:", error);
+  }
+}
+async function handleRegister() {
+  console.log("REGISTER FUNCTION BARU JALAN");
+  const name = document.getElementById('reg-name').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const pass = document.getElementById('reg-pass').value;
+
+  if (!name || !email || !pass) {
+    showToast('Lengkapi semua field!');
+    return;
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+if (!emailRegex.test(email)) {
+  showToast('Masukkan email yang valid!');
+  return;
+}
+
+  if (pass.length < 6) {
+    showToast('Password minimal 6 karakter');
+    return;
+  }
+
+  try {
+    const response = await fetch(API_BASE + '/auth/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name,
+        email,
+        password: pass
+      })
+    });
+
+    const data = await response.json();
+    console.log(data);
+
+    if (!response.ok) {
+      showToast(data.message || 'Register gagal!');
+      return;
+    }
+
+    showToast('Register berhasil!');
+
+    showToast('Akun berhasil dibuat! Silakan login.');
+
+// kosongkan form register
+document.getElementById('reg-name').value = '';
+document.getElementById('reg-email').value = '';
+document.getElementById('reg-pass').value = '';
+
+// pindah ke form login
+document.querySelector('.auth-tabs button:first-child').click();
+
+  }
+  catch(error) {
+  console.error("REGISTER ERROR:", error);
+  }
+}
+async function enterApp(){
+  document.getElementById('auth-screen').classList.remove('visible');
+  document.getElementById('main-app').classList.add('visible');
+  // Jalankan paralel: stations dan refreshUI tidak saling bergantung
+  await Promise.allSettled([
+    loadAndRenderStations(), // mengisi _allStations dan panggil renderAIRecommendations
+    refreshUI(),
+    initAIWeather(),         // fetch cuaca; rekomendasi lokasi diperbarui di loadAndRenderStations
+  ]);
+}
+function handleLogout(){
+  if(!confirm('Yakin mau keluar?'))return;
+  Object.values(timerIntervals).forEach(clearInterval);
+  timerIntervals={};
+  // Bersihkan semua data session
+  localStorage.removeItem('payungin_user');
+  localStorage.removeItem('token');
+  currentUser=null;
+  // Reset form
+  document.getElementById('main-app').classList.remove('visible');
+  document.getElementById('login-email').value='';
+  document.getElementById('login-pass').value='';
+  switchAuthTab('login');
+  document.getElementById('auth-screen').classList.add('visible');
+}
+
+// ══════════════════════════════════
+//  UI REFRESH
+// ══════════════════════════════════
+async function refreshUI(){
+  if(!currentUser) return;
+
+  // --- Data dari currentUser (sudah ada di memory / localStorage) ---
+  const fn = currentUser.name ? currentUser.name.split(' ')[0] : '?';
+  document.getElementById('hero-greeting').textContent   = `Halo, ${fn}! 👋`;
+  document.getElementById('topbar-avatar').textContent   = currentUser.name ? currentUser.name[0].toUpperCase() : 'U';
+  document.getElementById('profil-name').textContent     = currentUser.name  || '-';
+  document.getElementById('profil-email').textContent    = currentUser.email || '-';
+  document.getElementById('profil-avatar').textContent   = currentUser.name ? currentUser.name[0].toUpperCase() : 'U';
+
+  // Tampilkan saldo dari currentUser dulu (cepat, tidak perlu tunggu API)
+  document.getElementById('saldo-display').textContent  = fmt(currentUser.saldo || 0);
+  document.getElementById('topbar-saldo').textContent   = fmt(currentUser.saldo || 0);
+
+  // --- Fetch data terbaru dari backend ---
+  try {
+    // 1. Saldo terbaru dari /auth/me
+    const meRes = await apiRequest('GET', '/auth/me');
+    currentUser.saldo = meRes.data.user.saldo;
+    localStorage.setItem('payungin_user', JSON.stringify(currentUser));
+    document.getElementById('saldo-display').textContent = fmt(currentUser.saldo);
+    document.getElementById('topbar-saldo').textContent  = fmt(currentUser.saldo);
+
+    // 2. Pinjaman aktif
+    await renderLoans();
+
+    // 3. Riwayat peminjaman + laporan (parallel, not sequential to avoid one blocking other)
+    await Promise.allSettled([
+      renderRiwayat(),
+      renderRiwayatLaporan(),
+    ]);
+
+    // 4. Reload stations data
+    try {
+      const stRes = await apiRequest('GET', '/stations');
+      _allStations = stRes.data.stations || [];
+      renderStationsHome();
+    } catch(e){ /* silently keep cached stations */ }
+
+  } catch(err) {
+    console.warn('Gagal fetch data terbaru:', err.message);
+    // Tetap render dengan data lokal jika API gagal
+    renderLoans();
+    // Still try to render riwayat separately
+    Promise.allSettled([renderRiwayat(), renderRiwayatLaporan()]);
+  }
+}
+
+// Render pinjaman aktif dari API
+async function renderLoans(){
+  const container    = document.getElementById('loans-container');
+  const noBox        = document.getElementById('no-loan-box');
+  const addBtn       = document.getElementById('add-loan-btn-wrap');
+  const homeSummary  = document.getElementById('home-loan-summary');
+
+  let loans = [];
+  try {
+    const res = await apiRequest('GET', '/loans/active');
+    loans = res.data.loans || [];
+  } catch(err) {
+    console.warn('Gagal ambil pinjaman aktif:', err.message);
+  }
+
+  container.innerHTML = '';
+
+  if(loans.length === 0){
+    noBox.style.display = 'block';
+    addBtn.style.display = 'none';
+    homeSummary.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:6px 0;">Tidak ada pinjaman aktif.</div>';
+    return;
+  }
+
+  noBox.style.display = 'none';
+  addBtn.style.display = 'block';
+
+  loans.forEach((loan, i) => {
+    const div = document.createElement('div');
+    div.className = 'loan-card';
+    div.id = 'loan-card-' + loan.id;
+    const mins = loan.durationMinutes || 0;
+    const mm   = String(Math.floor(mins / 60)).padStart(2,'0') + ':' + String(mins % 60).padStart(2,'0');
+
+    // Tampilkan banner peringatan jika laporan rusak sudah disetujui admin
+    const damageBanner = loan.hasDamageReport ? `
+      <div style="background:#fff7ed;border:1.5px solid #fdba74;border-radius:8px;padding:9px 12px;margin-bottom:8px;font-size:12px;color:#92400e;line-height:1.5;">
+        🔧 <strong>Laporan kerusakan disetujui.</strong> Denda sudah dipotong. Silakan kembalikan payung fisik.
+      </div>` : '';
+
+    div.innerHTML = `
+      ${damageBanner}
+      <div class="loan-id-badge">PAYUNG #${i+1} (${loan.umbrellaCode})</div>
+      <div class="loan-meta">
+        <div class="timer-block">
+          <div class="lbl">Waktu Terpakai</div>
+          <div class="timer-val" id="timer-${loan.id}">${mm}</div>
+        </div>
+        <button class="btn-kembalikan" onclick="openKembalikan('${loan.id}','${loan.umbrellaCode}',${loan.hasDamageReport ? 'true' : 'false'})">Kembalikan</button>
+      </div>
+      <div class="loan-from">Diambil dari: <strong>${loan.pickupStation}</strong></div>`;
+    container.appendChild(div);
+    startTimerFromSeconds(loan.id, mins * 60);
+  });
+
+  homeSummary.innerHTML = loans.map(l =>
+    `<div style="font-size:13px;padding:4px 0;display:flex;align-items:center;gap:8px;">
+      <span style="font-weight:700;color:var(--blue);">${l.umbrellaCode}</span>
+      <span class="tag-green">Aktif</span>
+    </div>`
+  ).join('');
+}
+
+// Render riwayat peminjaman dari API
+async function renderRiwayat(){
+  const list = document.getElementById('riwayat-list');
+  if(!list) return;
+
+  try {
+    // Gabungkan peminjaman aktif + riwayat agar selalu konsisten
+    const [activeRes, histRes] = await Promise.all([
+      apiRequest('GET', '/loans/active'),
+      apiRequest('GET', '/loans/history?limit=20'),
+    ]);
+
+    const activeLoans  = (activeRes.data?.loans  || []).map(l => ({...l, status:'active'}));
+    const historyLoans = (histRes.data?.loans     || []);
+
+    // Hindari duplikat: history sudah include yang returned, aktif terpisah
+    const histIds = new Set(historyLoans.map(l => l.id));
+    const combined = [
+      ...activeLoans.filter(l => !histIds.has(l.id)),
+      ...historyLoans,
+    ];
+
+    if(combined.length === 0){
+      list.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:16px 0;text-align:center;">Belum ada riwayat peminjaman.</div>';
+      return;
+    }
+
+    list.innerHTML = combined.map(loan => {
+      const tgl = new Date(loan.borrowedAt).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+      const route = loan.returnStation
+        ? `${loan.pickupStation} →<br/>${loan.returnStation}`
+        : `${loan.pickupStation} → (belum dikembalikan)`;
+      let badge;
+      if (loan.status === 'damaged') {
+        // Laporan rusak disetujui admin, belum dikembalikan
+        badge = '<span style="background:#fff7ed;color:#c2410c;font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;">🔧 Rusak</span>';
+      } else if (loan.notes === 'returned_after_damage') {
+        // Laporan rusak disetujui admin, sudah dikembalikan — tetap tampil Rusak
+        badge = '<span style="background:#fff7ed;color:#c2410c;font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;">🔧 Rusak</span>';
+      } else if (loan.status === 'lost') {
+        badge = '<span style="background:#fef2f2;color:#991b1b;font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;">🚫 Hilang</span>';
+      } else if (loan.notes === 'closed_by_admin') {
+        badge = '<span style="background:#fee2e2;color:#991b1b;font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;">Ditutup Admin</span>';
+      } else if (loan.status === 'returned') {
+        badge = '<span class="badge-ok">Selesai</span>';
+      } else {
+        badge = '<span style="background:#fef9c3;color:#854d0e;font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;">Aktif</span>';
+      }
+      // Tentukan nominal yang ditampilkan:
+      // - damaged / returned_after_damage: tampilkan denda dari damage_report
+      // - lost: tampilkan denda dari damage_report
+      // - returned normal: tampilkan feeCharged
+      let biayaLabel;
+      if (loan.status === 'damaged' || loan.status === 'lost' || loan.notes === 'returned_after_damage') {
+        biayaLabel = loan.penaltyAmount > 0 ? `Denda: ${fmt(loan.penaltyAmount)}` : 'Denda: -';
+      } else {
+        biayaLabel = loan.feeCharged > 0 ? `- ${fmt(loan.feeCharged)}` : '-';
+      }
+      return `<div class="riwayat-item">
+        <div><div class="riwayat-date">${tgl}</div><div class="riwayat-route">${route}</div></div>
+        <div class="riwayat-right">${badge}<div class="riwayat-cost">${biayaLabel}</div></div>
+      </div>`;
+    }).join('');
+  } catch(err) {
+    list.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:16px 0;text-align:center;">Gagal memuat riwayat.</div>';
+  }
+}
+
+// Render riwayat laporan kerusakan milik user
+async function renderRiwayatLaporan(){
+  const list = document.getElementById('riwayat-laporan-list');
+  if(!list) return;
+
+  try {
+    const res = await apiRequest('GET', '/damage/my-reports');
+    const reports = res.data?.reports || [];
+
+    if(reports.length === 0){
+      list.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:16px 0;text-align:center;">Belum ada laporan kerusakan.</div>';
+      return;
+    }
+
+    const statusMap = {
+      pending:  { label: 'Menunggu Verifikasi', bg: '#fef9c3', color: '#854d0e' },
+      verified: { label: 'Disetujui & Diproses', bg: '#dcfce7', color: '#166534' },
+      rejected: { label: 'Ditolak', bg: '#fee2e2', color: '#991b1b' },
+    };
+
+    list.innerHTML = reports.map(r => {
+      const tgl     = new Date(r.createdAt).toLocaleDateString('id-ID', {day:'numeric',month:'long',year:'numeric'});
+      const st      = statusMap[r.status] || { label: r.status, bg: '#f1f5f9', color: '#64748b' };
+      const badge   = `<span style="background:${st.bg};color:${st.color};font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;">${st.label}</span>`;
+      const denda   = r.penaltyCharged ? `<div style="font-size:12px;color:var(--red);margin-top:2px;">Denda dipotong: ${fmt(r.penaltyAmount)}</div>` : '';
+      const catatan = r.adminNotes ? `<div style="font-size:12px;color:var(--muted);margin-top:2px;">Catatan Admin: ${r.adminNotes}</div>` : '';
+      const jenis   = r.reportType === 'hilang' ? '🚫 Hilang' : '🔧 Rusak';
+
+      // Notifikasi peminjaman ditutup admin (poin 8)
+      const adminClosed = r.status === 'verified' ? `
+        <div style="margin-top:8px;padding:10px 12px;background:#fff7ed;border:1.5px solid #fdba74;border-radius:8px;font-size:12px;color:#92400e;line-height:1.5;">
+          ⚠️ ${r.reportType === 'hilang' ? '<strong>Laporan Kehilangan Disetujui</strong><br>Peminjaman telah ditutup oleh admin.' : '<strong>Laporan Kerusakan Disetujui</strong><br>Peminjaman telah ditutup oleh admin.'}
+        </div>` : '';
+
+      return `<div class="riwayat-item" style="flex-direction:column;align-items:flex-start;gap:4px;">
+        <div style="display:flex;justify-content:space-between;width:100%;">
+          <div>
+            <div class="riwayat-date">${tgl}</div>
+            <div style="font-size:12px;color:var(--muted);">Payung ${r.umbrellaCode} · ${jenis}</div>
+            ${denda}${catatan}
+          </div>
+          <div>${badge}</div>
+        </div>
+        ${adminClosed}
+      </div>`;
+    }).join('');
+  } catch(err) {
+    list.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:16px 0;text-align:center;">Gagal memuat riwayat laporan.</div>';
+  }
+}
+
+// ══════════════════════════════════
+//  PAGE NAV
+// ══════════════════════════════════
+function switchPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.topbar-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.mob-nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  const tn=document.getElementById('tnav-'+name);
+  if(tn)tn.classList.add('active');
+  const mn=document.getElementById('mnav-'+name);
+  if(mn)mn.classList.add('active');
+  // Refresh riwayat when navigating to profil to ensure data always up to date
+  if(name === 'profil' && currentUser){
+    Promise.allSettled([renderRiwayat(), renderRiwayatLaporan()]);
+  }
+}
+
+// ══════════════════════════════════
+//  STATIONS — load from API
+// ══════════════════════════════════
+async function loadAndRenderStations(){
+  try {
+    const res = await apiRequest('GET', '/stations');
+    _allStations = res.data.stations || [];
+    renderStationsHome();
+    renderReturnStationsList();
+    // Update rekomendasi AI setelah data station tersedia
+    renderAIRecommendations(_allStations);
+  } catch(err){
+    console.warn('Gagal load stations:', err.message);
+  }
+}
+
+function renderStationsHome(){
+  const container = document.getElementById('station-list-home');
+  if(!container) return;
+  if(!_allStations.length){
+    container.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:16px 0;grid-column:span 2;">Tidak ada data station.</div>';
+    return;
+  }
+  // Split into two columns
+  const half = Math.ceil(_allStations.length / 2);
+  const col1 = _allStations.slice(0, half);
+  const col2 = _allStations.slice(half);
+
+  const renderCol = (items) => items.map(s => {
+    const avail = s.availableCount || 0;
+    const cls = avail > 5 ? 'green' : avail > 0 ? 'orange' : 'red';
+    const label = avail > 0 ? `Tersedia: ${avail} Payung` : 'Payung Habis';
+    return `<div class="station-row" onclick="showToast('${s.name} — ${avail} payung tersedia')">
+      <div>
+        <div class="station-name">${s.name}</div>
+        <div class="station-avail ${cls}">${label}</div>
+      </div>
+      <span style="color:var(--muted)">›</span>
+    </div>`;
+  }).join('');
+
+  container.innerHTML = `<div>${renderCol(col1)}</div><div>${renderCol(col2)}</div>`;
+}
+
+function renderReturnStationsList(){
+  const container = document.getElementById('kembalikan-station-list');
+  if(!container || !_allStations.length) return;
+
+  container.innerHTML = _allStations.map(s => {
+    const avail = s.availableCount || 0;
+    const cls = avail > 5 ? 'green' : avail > 0 ? 'orange' : '';
+    const label = avail > 5 ? 'Kapasitas tersedia' : avail > 0 ? 'Kapasitas terbatas' : 'Penuh';
+    return `<div class="station-choice" data-station-id="${s.id}"
+      onclick="selectReturnStation(this,'${s.name}')">
+      <div>
+        <div class="station-name">${s.name}</div>
+        <div class="station-avail ${cls}">${label}</div>
+      </div>
+      <div class="station-check">✓</div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════
+//  BORROW PICKER — Scan QR or Demo
+// ══════════════════════════════════
+function openBorrowPicker(){
+  const existing = document.getElementById('borrow-picker-overlay');
+  if(existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'borrow-picker-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;';
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:20px;padding:32px 28px;max-width:380px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.25);">
+      <div style="font-size:18px;font-weight:800;color:var(--navy);margin-bottom:6px;">Pinjam Payung</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:24px;">Pilih cara meminjam:</div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <button onclick="document.getElementById('borrow-picker-overlay').remove(); startScanner();"
+          style="border:2px solid var(--navy);border-radius:14px;padding:18px 20px;background:var(--navy);color:#fff;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:12px;text-align:left;transition:all .15s;">
+          <span style="font-size:28px;">📷</span>
+          <div><div style="font-size:14px;font-weight:800;">Scan QR dengan Kamera</div><div style="font-size:12px;opacity:.75;margin-top:2px;">Scan QR code di station Payungin</div></div>
+        </button>
+        <button onclick="document.getElementById('borrow-picker-overlay').remove(); startDemoMode();"
+          style="border:2px solid var(--blue);border-radius:14px;padding:18px 20px;background:#eff6ff;color:var(--navy);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:12px;text-align:left;transition:all .15s;">
+          <span style="font-size:28px;">🎭</span>
+          <div><div style="font-size:14px;font-weight:800;">Simulasi Demo</div><div style="font-size:12px;color:var(--muted);margin-top:2px;">Pilih station & payung dari daftar database</div></div>
+        </button>
+      </div>
+      <button onclick="document.getElementById('borrow-picker-overlay').remove()"
+        style="margin-top:14px;width:100%;padding:12px;background:none;border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;">
+        Batal
+      </button>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+async function startDemoMode(){
+  // Load stations with available umbrellas from API
+  showToast('Memuat daftar station...');
+  try {
+    const res = await apiRequest('GET', '/stations');
+    const stations = (res.data.stations || []).filter(s => s.availableCount > 0);
+
+    if(!stations.length){
+      showToast('Semua payung sedang dipinjam. Coba lagi nanti.');
+      return;
+    }
+
+    showDemoStationPicker(stations);
+  } catch(err){
+    showToast(err.message || 'Gagal memuat data station.');
+  }
+}
+
+function showDemoStationPicker(stations){
+  const existing = document.getElementById('demo-station-overlay');
+  if(existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'demo-station-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;';
+
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:20px;padding:28px 24px;max-width:400px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.25);">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+        <span style="font-size:20px;">🎭</span>
+        <div style="font-size:16px;font-weight:800;color:var(--navy);">Simulasi Demo</div>
+      </div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:20px;">Pilih station untuk meminjam payung:</div>
+      <div style="max-height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;">
+        ${stations.map(s => `
+          <button onclick="showDemoUmbrellaPicker('${s.id}', '${s.name.replace(/'/g,"\\'")}', this)"
+            data-station-id="${s.id}"
+            style="border:2px solid var(--border);border-radius:12px;padding:14px 16px;background:var(--bg);cursor:pointer;text-align:left;display:flex;align-items:center;justify-content:space-between;transition:all .15s;"
+            onmouseover="this.style.borderColor='var(--blue)';this.style.background='#eff6ff'"
+            onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--bg)'">
+            <div>
+              <div style="font-size:14px;font-weight:700;color:var(--navy);">📍 ${s.name}</div>
+              <div style="font-size:12px;color:var(--green);font-weight:600;margin-top:3px;">${s.availableCount} payung tersedia</div>
+            </div>
+            <span style="color:var(--blue);font-size:18px;">›</span>
+          </button>`).join('')}
+      </div>
+      <button onclick="document.getElementById('demo-station-overlay').remove(); openBorrowPicker();"
+        style="margin-top:14px;width:100%;padding:12px;background:none;border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;">
+        ← Kembali
+      </button>
+    </div>`;
+
+  document.body.appendChild(overlay);
+}
+
+async function showDemoUmbrellaPicker(stationId, stationName, btn){
+  if(btn){
+    btn.disabled = true;
+    btn.innerHTML = `<div style="font-size:14px;font-weight:700;color:var(--navy);">⏳ Memuat payung...</div>`;
+  }
+  try {
+    const res = await apiRequest('GET', `/stations/${stationId}/umbrellas`);
+    const { station, umbrellas } = res.data;
+
+    document.getElementById('demo-station-overlay')?.remove();
+
+    if(!umbrellas || !umbrellas.length){
+      showToast(`Payung di ${stationName} habis. Coba station lain!`);
+      startDemoMode();
+      return;
+    }
+
+    // Reuse same showUmbrellaPickerModal function
+    showUmbrellaPickerModal(station, umbrellas);
+  } catch(err){
+    showToast(err.message || 'Gagal memuat payung.');
+    if(btn) btn.disabled = false;
+  }
+}
+
+
+function startAllTimers(){
+  // Timer sekarang dikelola oleh renderLoans() yang sudah tau elapsed seconds dari API
+}
+function startTimerFromSeconds(loanId, initialSeconds){
+  clearInterval(timerIntervals[loanId]);
+  let elapsed = initialSeconds;
+  timerIntervals[loanId] = setInterval(() => {
+    elapsed++;
+    const el = document.getElementById('timer-' + loanId);
+    if(!el){ clearInterval(timerIntervals[loanId]); return; }
+    el.textContent = String(Math.floor(elapsed / 3600)).padStart(2,'0') + ':' +
+                     String(Math.floor((elapsed % 3600) / 60)).padStart(2,'0') + ':' +
+                     String(elapsed % 60).padStart(2,'0');
+  }, 1000);
+}
+// Shim agar kode lama yang memanggil startTimer(id) tidak error
+function startTimer(id){ /* tidak dipakai lagi, digantikan startTimerFromSeconds */ }
+
+// ══════════════════════════════════
+//  SCANNER
+// ══════════════════════════════════
+async function startScanner(){
+  document.getElementById('reader-container').style.display='flex';
+  html5QrCode=new Html5Qrcode("reader");
+  try{
+    await html5QrCode.start({facingMode:"environment"},{fps:10,qrbox:{width:250,height:250}},handleScanSuccess);
+  }catch(e){
+    showToast('Gagal akses kamera!');
+    stopScanner();
+  }
+}
+function stopScanner(){
+  if(html5QrCode&&html5QrCode.isScanning){
+    html5QrCode.stop().then(()=>{ document.getElementById('reader-container').style.display='none'; });
+  } else {
+    document.getElementById('reader-container').style.display='none';
+  }
+}
+// handleScanSuccess dipanggil oleh html5QrCode setelah berhasil scan
+// qrText = isi QR code stasiun, contoh: "STN-001"
+async function handleScanSuccess(qrText){
+  stopScanner();
+  showToast('QR terbaca! Memuat payung tersedia...');
+  try {
+    const res = await apiRequest('GET', '/stations/scan/' + encodeURIComponent(qrText.trim()));
+    const { station, umbrellas } = res.data;
+
+    if(!umbrellas || umbrellas.length === 0){
+      showToast(`Payung di ${station.name} habis. Coba station lain!`);
+      return;
+    }
+
+    // Tampilkan daftar payung di modal kembalikan (re-use elemen yang ada)
+    // atau gunakan sederhana: prompt user pilih dari list
+    showUmbrellaPickerModal(station, umbrellas);
+  } catch(err){
+    showToast(err.message || 'Gagal membaca QR station.');
+  }
+}
+
+let _pickerStationId   = null;
+let _pickerStationName = null; // simpan nama station untuk konfirmasi
+
+function showUmbrellaPickerModal(station, umbrellas){
+  _pickerStationId   = station.id;
+  _pickerStationName = station.name;
+
+  const overlay = document.getElementById('umbrella-picker-overlay') || createPickerOverlay();
+
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:20px;padding:28px 24px;max-width:380px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.2);">
+      <div style="font-size:16px;font-weight:800;color:var(--navy);margin-bottom:4px;">Pilih Payung</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:20px;">📍 ${station.name}</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Ambil payung fisiknya, lalu ketuk ID-nya untuk konfirmasi:</div>
+      <div style="display:flex;flex-direction:column;gap:10px;max-height:260px;overflow-y:auto;">
+        ${umbrellas.map(u => `
+          <button onclick="showBorrowConfirm('${u.id}','${u.code}')"
+            style="background:var(--bg);border:2px solid var(--border);border-radius:12px;padding:14px 18px;
+                   font-size:15px;font-weight:800;color:var(--navy);cursor:pointer;text-align:left;
+                   display:flex;align-items:center;gap:10px;transition:all .15s;"
+            onmouseover="this.style.borderColor='var(--blue)';this.style.background='var(--blue-light)'"
+            onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--bg)'">
+            ☂️ ${u.code}
+          </button>`).join('')}
+      </div>
+      <button onclick="document.getElementById('umbrella-picker-overlay').style.display='none'"
+        style="margin-top:16px;width:100%;padding:12px;background:none;border:1.5px solid var(--border);
+               border-radius:12px;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;">
+        Batal
+      </button>
+    </div>`;
+  overlay.style.display = 'flex';
+}
+
+function createPickerOverlay(){
+  const el = document.createElement('div');
+  el.id = 'umbrella-picker-overlay';
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;' +
+                     'align-items:center;justify-content:center;z-index:9999;padding:20px;';
+  document.body.appendChild(el);
+  return el;
+}
+
+// Konfirmasi sebelum borrow — tampilkan ID payung + nama station
+function showBorrowConfirm(umbrellaId, umbrellaCode) {
+  // Sembunyikan picker list, tapi JANGAN hapus — user bisa kembali
+  const pickerOverlay = document.getElementById('umbrella-picker-overlay');
+  if (pickerOverlay) pickerOverlay.style.display = 'none';
+
+  const existing = document.getElementById('borrow-confirm-overlay');
+  if (existing) existing.remove();
+
+  const stationName = _pickerStationName || 'Station';
+
+  const el = document.createElement('div');
+  el.id = 'borrow-confirm-overlay';
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(15,30,53,.55);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;';
+  el.innerHTML = `
+    <div style="background:#fff;border-radius:20px;padding:32px 28px;max-width:360px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.25);text-align:center;">
+      <img src="assets/icon-payungin.png" alt="Payungin" style="width:60px;height:60px;border-radius:50%;object-fit:cover;margin-bottom:12px;border:2px solid var(--border);" onerror="this.style.display='none'" />
+      <div style="font-size:18px;font-weight:800;color:var(--navy);margin-bottom:16px;">Konfirmasi Peminjaman</div>
+      <div style="background:var(--bg);border-radius:12px;padding:14px;margin-bottom:16px;text-align:left;">
+        <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px;">
+          <span style="color:var(--muted);">ID Payung</span>
+          <strong style="color:var(--navy);">${umbrellaCode}</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px;border-top:1px solid var(--border);">
+          <span style="color:var(--muted);">Station</span>
+          <strong style="color:var(--navy);">📍 ${stationName}</strong>
+        </div>
+      </div>
+      <div style="background:var(--blue-light);border-radius:10px;padding:10px 14px;margin-bottom:20px;font-size:12px;color:var(--navy);text-align:left;line-height:1.6;">
+        💡 Biaya <strong>Rp 3.000</strong> per 24 jam (atau sebagian 24 jam).<br>
+        Saldo dipotong otomatis saat pengembalian.
+      </div>
+      <div style="font-size:14px;color:var(--muted);margin-bottom:20px;">Apakah Anda yakin ingin meminjam payung ini?</div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="document.getElementById('borrow-confirm-overlay').remove(); document.getElementById('umbrella-picker-overlay').style.display='flex';"
+          style="flex:1;padding:13px;background:none;border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;">
+          ← Batal
+        </button>
+        <button onclick="document.getElementById('borrow-confirm-overlay').remove(); selectAndBorrow('${umbrellaId}','${umbrellaCode}');"
+          style="flex:1;padding:13px;background:var(--navy);border:none;border-radius:12px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;">
+          ✅ Konfirmasi
+        </button>
+      </div>
+    </div>`;
+  document.body.appendChild(el);
+}
+
+async function selectAndBorrow(umbrellaId, umbrellaCode){
+  try {
+    const res = await apiRequest('POST', '/loans/borrow', {
+      umbrellaId,
+      stationId: _pickerStationId
+    });
+
+    showToast(`Berhasil! Payung ${umbrellaCode} dipinjam ☂️`);
+    await refreshUI();
+    switchPage('pinjam');
+  } catch(err){
+    console.error(err);
+    showToast(err.message || 'Gagal meminjam payung.');
+  }
+}
+
+// ══════════════════════════════════
+//  KEMBALIKAN
+// ══════════════════════════════════
+// openKembalikan(loanId, umbrellaCode, hasDamageReport?)
+// hasDamageReport = true: laporan rusak sudah disetujui admin, tampilkan warning berbeda
+async function openKembalikan(loanId, umbrellaCode, hasDamageReport = false){
+  currentKembalikanId = loanId;
+  selectedReturnStation = null;
+  document.getElementById('kembalikan-sub').textContent = 'Pilih station pengembalian';
+  document.getElementById('kembalikan-summary').style.display = 'none';
+  document.getElementById('btn-konfirmasi-kembali').disabled = true;
+  // Tampilkan kode payung dari parameter
+  const badge = document.getElementById('kem-payung-id');
+  if(badge) badge.textContent = umbrellaCode || loanId;
+
+  // Tampilkan/sembunyikan banner dan update biaya berdasarkan status laporan rusak
+  const dmgBanner = document.getElementById('kembalikan-damage-banner');
+  if (dmgBanner) dmgBanner.style.display = hasDamageReport ? 'block' : 'none';
+  const biayaVal = document.getElementById('kem-biaya-val');
+  if (biayaVal) biayaVal.textContent = hasDamageReport ? 'Gratis (denda sudah dipotong)' : 'Rp 3.000';
+
+  // Reload stations from API to get latest data
+  try {
+    const res = await apiRequest('GET', '/stations');
+    _allStations = res.data.stations || [];
+    renderReturnStationsList();
+  } catch(err){
+    // Use cached _allStations if API fails
+    if(_allStations.length) renderReturnStationsList();
+  }
+
+  openModal('modal-kembalikan');
+}
+function selectReturnStation(el, name){
+  document.querySelectorAll('#kembalikan-station-list .station-choice').forEach(i => i.classList.remove('sel'));
+  el.classList.add('sel');
+  selectedReturnStation = name;
+  document.getElementById('kem-station-name').textContent = name;
+  document.getElementById('kembalikan-summary').style.display = 'block';
+  document.getElementById('btn-konfirmasi-kembali').disabled = false;
+}
+async function confirmKembalikan(){
+  if(!selectedReturnStation || !currentKembalikanId) return;
+
+  // Cari stationId berdasarkan nama yang dipilih (dari daftar STATIONS di HTML)
+  // Atau kirim nama, backend cari sendiri berdasarkan nama
+  // Untuk project ini, kita simpan stationId di data-attribute element station-choice
+  const selectedEl = document.querySelector('#kembalikan-station-list .station-choice.sel');
+  const returnStationId = selectedEl ? selectedEl.dataset.stationId : null;
+
+  if(!returnStationId){
+    showToast('Station tidak valid. Hubungi admin.');
+    return;
+  }
+
+  document.getElementById('btn-konfirmasi-kembali').disabled = true;
+  document.getElementById('btn-konfirmasi-kembali').textContent = 'Memproses...';
+
+  try {
+    const res = await apiRequest('POST', `/loans/${currentKembalikanId}/return`, {
+      returnStationId
+    });
+    const { feeCharged, durationMinutes } = res.data.loan;
+
+    clearInterval(timerIntervals[currentKembalikanId]);
+    delete timerIntervals[currentKembalikanId];
+
+    closeModal('modal-kembalikan');
+    if (feeCharged === 0) {
+      showToast('Payung berhasil dikembalikan! ✅');
+    } else {
+      showToast(`Payung dikembalikan! Biaya: ${fmt(feeCharged)} ✅`);
+    }
+    await refreshUI();
+    switchPage('home');
+  } catch(err){
+    showToast(err.message || 'Gagal mengembalikan payung.');
+  } finally {
+    document.getElementById('btn-konfirmasi-kembali').disabled = false;
+    document.getElementById('btn-konfirmasi-kembali').textContent = 'Konfirmasi Pengembalian';
+  }
+}
+
+// ══════════════════════════════════
+//  E-WALLET SELECTION (untuk refund saja)
+// ══════════════════════════════════
+function selEw(el,name,mode){
+  const scope='#modal-refund';
+  document.querySelectorAll(scope+' .ew-opt').forEach(e=>e.classList.remove('sel'));
+  el.classList.add('sel');
+  rf.ew=name; document.getElementById('rf-btn1').disabled=false;
+}
+
+// ══════════════════════════════════
+//  TOP UP FLOW — QRIS ONLY
+// ══════════════════════════════════
+function tuShowStep(s){ [1,2].forEach(i=>document.getElementById('tu-s'+i).style.display=i===s?'block':'none'); }
+
+function selNom(el,amount,mode){
+  if(mode==='tu'){
+    document.querySelectorAll('#tu-s1 .nom-opt').forEach(b=>b.classList.remove('sel'));
+    el.classList.add('sel');
+    tu.amount = amount;
+    // Clear custom input
+    const customEl = document.getElementById('tu-custom');
+    if(customEl) customEl.value = '';
+    document.getElementById('tu-btn1').disabled = false;
+  }
+}
+
+function tuCustomInput(){
+  const val = parseInt(document.getElementById('tu-custom').value) || 0;
+  // Deselect preset buttons
+  document.querySelectorAll('#tu-s1 .nom-opt').forEach(b=>b.classList.remove('sel'));
+  tu.amount = val;
+  document.getElementById('tu-btn1').disabled = (val < 10000 || val > 1000000);
+}
+
+function tuGoQris(){
+  if(!tu.amount || tu.amount < 10000){
+    showToast('Pilih atau masukkan nominal minimal Rp 10.000!');
+    return;
+  }
+  if(tu.amount > 1000000){
+    showToast('Maksimal top up Rp 1.000.000!');
+    return;
+  }
+  document.getElementById('tu-sum-nom').textContent   = fmt(tu.amount);
+  document.getElementById('tu-sum-total').textContent = fmt(tu.amount);
+  tuShowStep(2);
+}
+
+let _topupPollInterval = null;
+
+// ── DEMO MODE: confirmTopup berjalan full lokal, tanpa panggil Midtrans ──
+// Untuk mengembalikan ke mode normal (Midtrans aktif):
+//   1. Hapus blok "DEMO MODE" ini (dari sini sampai tanda END DEMO MODE)
+//   2. Uncomment blok "NORMAL MODE" di bawahnya
+// ─────────────────────────────────────────────────────────────────────────
+async function confirmTopup(){
+  if(!tu.amount || tu.amount < 10000){
+    showToast('Nominal tidak valid!');
+    return;
+  }
+
+  const btn = document.getElementById('tu-btn2');
+  if(btn){ btn.disabled = true; btn.textContent = '⏳ Membuat QRIS...'; }
+
+  const amount = tu.amount;
+
+  // Buat dummy transactionId lokal (tidak perlu hit backend)
+  const dummyTransactionId = 'DEMO-' + Date.now();
+  // QR dummy — placeholder resmi QRIS Indonesia (base64 SVG kecil)
+  const dummyQrUrl = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" fill="%23fff"/><rect x="10" y="10" width="60" height="60" rx="4" fill="%23111"/><rect x="20" y="20" width="40" height="40" rx="2" fill="%23fff"/><rect x="28" y="28" width="24" height="24" fill="%23111"/><rect x="130" y="10" width="60" height="60" rx="4" fill="%23111"/><rect x="140" y="20" width="40" height="40" rx="2" fill="%23fff"/><rect x="148" y="28" width="24" height="24" fill="%23111"/><rect x="10" y="130" width="60" height="60" rx="4" fill="%23111"/><rect x="20" y="140" width="40" height="40" rx="2" fill="%23fff"/><rect x="28" y="148" width="24" height="24" fill="%23111"/><rect x="80" y="10" width="10" height="10" fill="%23111"/><rect x="100" y="10" width="10" height="10" fill="%23111"/><rect x="80" y="30" width="10" height="10" fill="%23111"/><rect x="100" y="30" width="10" height="10" fill="%23111"/><rect x="80" y="80" width="10" height="10" fill="%23111"/><rect x="100" y="80" width="10" height="10" fill="%23111"/><rect x="80" y="100" width="10" height="10" fill="%23111"/><rect x="130" y="80" width="10" height="10" fill="%23111"/><rect x="150" y="80" width="10" height="10" fill="%23111"/><rect x="170" y="80" width="10" height="10" fill="%23111"/><rect x="130" y="100" width="10" height="10" fill="%23111"/><rect x="150" y="100" width="10" height="10" fill="%23111"/><rect x="80" y="130" width="10" height="10" fill="%23111"/><rect x="100" y="130" width="10" height="10" fill="%23111"/><rect x="120" y="130" width="10" height="10" fill="%23111"/><rect x="80" y="150" width="10" height="10" fill="%23111"/><rect x="120" y="150" width="10" height="10" fill="%23111"/><rect x="80" y="170" width="10" height="10" fill="%23111"/><rect x="100" y="170" width="10" height="10" fill="%23111"/><rect x="120" y="170" width="10" height="10" fill="%23111"/><rect x="150" y="130" width="10" height="10" fill="%23111"/><rect x="170" y="130" width="10" height="10" fill="%23111"/><rect x="150" y="160" width="30" height="10" fill="%23111"/><text x="100" y="110" text-anchor="middle" font-size="9" fill="%23555" font-family="sans-serif">DEMO QRIS</text></svg>';
+  const dummyExpireAt = new Date(Date.now() + 15*60*1000).toISOString();
+
+  closeModal('modal-topup');
+  showQrisModal(dummyQrUrl, amount, dummyExpireAt, dummyTransactionId);
+
+  // Reset state form
+  tu = { amount: 0 };
+  tuShowStep(1);
+  document.querySelectorAll('#tu-s1 .nom-opt').forEach(b=>b.classList.remove('sel'));
+  const ci = document.getElementById('tu-custom'); if(ci) ci.value = '';
+  document.getElementById('tu-btn1').disabled = true;
+
+  if(btn){ btn.disabled = false; btn.textContent = 'Buat QRIS & Bayar'; }
+}
+// ── END DEMO MODE ──────────────────────────────────────────────────────────
+
+/* ── NORMAL MODE (aktifkan kembali setelah Midtrans merchant aktif) ────────
+async function confirmTopup(){
+  if(!tu.amount || tu.amount < 10000){ showToast('Nominal tidak valid!'); return; }
+  const btn = document.getElementById('tu-btn2');
+  if(btn){ btn.disabled = true; btn.textContent = '⏳ Membuat QRIS...'; }
+  try {
+    const res = await apiRequest('POST', '/transactions/topup', { amount: tu.amount });
+    const { transactionId, qrUrl, expireAt, amount } = res.data;
+    closeModal('modal-topup');
+    showQrisModal(qrUrl, amount, expireAt, transactionId);
+    clearInterval(_topupPollInterval);
+    _topupPollInterval = setInterval(async () => {
+      try {
+        const statusRes = await apiRequest('GET', `/transactions/topup/${transactionId}/status`);
+        const { status } = statusRes.data;
+        updateQrisStatus(status);
+        if(status === 'success'){ clearInterval(_topupPollInterval); setTimeout(async()=>{ closeQrisModal(); showToast(`✅ Top up ${fmt(amount)} berhasil! Saldo kamu bertambah 🎉`); await refreshUI(); },1500); }
+        else if(['expired','failed'].includes(status)){ clearInterval(_topupPollInterval); setTimeout(()=>{ closeQrisModal(); showToast(status==='expired'?'QRIS kadaluarsa. Silakan buat ulang.':'Pembayaran gagal. Coba lagi ya!'); },1500); }
+      } catch(e){}
+    }, 3000);
+    tu = { amount: 0 }; tuShowStep(1);
+    document.querySelectorAll('#tu-s1 .nom-opt').forEach(b=>b.classList.remove('sel'));
+    const ci = document.getElementById('tu-custom'); if(ci) ci.value = '';
+    document.getElementById('tu-btn1').disabled = true;
+  } catch(err){ showToast(err.message || 'Gagal membuat QRIS. Coba lagi!'); }
+  finally { if(btn){ btn.disabled = false; btn.textContent = 'Buat QRIS & Bayar'; } }
+}
+── END NORMAL MODE ──────────────────────────────────────────────────────── */
+
+function updateQrisStatus(status){
+  const lbl = document.getElementById('qris-status-lbl');
+  if(!lbl) return;
+  if(status === 'success'){
+    lbl.textContent = '✅ Pembayaran berhasil!';
+    lbl.style.color = 'var(--green)';
+  } else if(status === 'expired'){
+    lbl.textContent = '⏰ QRIS kadaluarsa';
+    lbl.style.color = '#ef4444';
+  } else if(status === 'failed'){
+    lbl.textContent = '❌ Pembayaran gagal';
+    lbl.style.color = '#ef4444';
+  } else {
+    lbl.textContent = '⏳ Menunggu pembayaran...';
+    lbl.style.color = 'var(--orange)';
+  }
+}
+
+function showQrisModal(qrUrl, amount, expireAt, transactionId){
+  const existing = document.getElementById('qris-overlay');
+  if(existing) existing.remove();
+
+  // Hitung sisa waktu (countdown)
+  const expireMs   = expireAt ? new Date(expireAt).getTime() : Date.now() + 15*60*1000;
+  const expireTime = new Date(expireMs).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+
+  const overlay = document.createElement('div');
+  overlay.id = 'qris-overlay';
+  overlay.style.cssText =
+'position:fixed;inset:0;background:rgba(15,30,53,.65);display:flex;' +
+'align-items:flex-start;justify-content:center;z-index:9999;' +
+'padding:20px;overflow-y:auto;';
+  overlay.innerHTML = `
+    <div style="
+      background:#fff;
+      border-radius:24px;
+      padding:28px 24px 24px;
+      max-width:360px;
+      width:100%;
+      text-align:center;
+      box-shadow:0 24px 80px rgba(0,0,0,.3);
+      position:relative;
+      ">
+      <!-- Header -->
+      <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:4px;">
+        <span style="font-size:17px;font-weight:800;color:var(--navy);">Scan QRIS untuk Bayar</span>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">
+        GoPay &nbsp;·&nbsp; OVO &nbsp;·&nbsp; DANA &nbsp;·&nbsp; ShopeePay &nbsp;·&nbsp; M-Banking
+      </div>
+
+      <!-- QR Code -->
+      <div id="qris-img-wrap"
+  style="background:#fff;border:2px solid #e5e7eb;border-radius:16px;padding:16px;margin-bottom:14px;">
+
+  <img
+  src="assets/qris-demo.png"
+  alt="QRIS"
+  style="width:180px;height:180px;display:block;margin:auto;">
+
+  <div style="margin-top:12px;border-top:1px solid #e5e7eb;padding-top:12px;">
+    <div style="font-size:11px;color:#666;">
+      NMID: ID1025374929384
+    </div>
+
+    <div style="font-size:16px;font-weight:700;color:#111;">
+      PAYUNGIN INDONESIA
+    </div>
+  </div>
+
+</div>
+
+      <!-- Nominal -->
+      <div data-demo-amount="${amount}" style="font-size:26px;font-weight:800;color:var(--navy);margin-bottom:4px;">${fmt(amount)}</div>
+
+      <!-- Status & timer -->
+      <div style="font-size:12px;color:var(--muted);margin-bottom:16px;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;">
+        <span>⏱ Berlaku hingga <strong>${expireTime}</strong></span>
+        <span>·</span>
+        <span id="qris-status-lbl" style="color:var(--orange);font-weight:700;">⏳ Menunggu pembayaran...</span>
+      </div>
+
+      <!-- Countdown bar -->
+      <div style="background:var(--border);border-radius:4px;height:4px;margin-bottom:18px;overflow:hidden;">
+        <div id="qris-countdown-bar" style="height:100%;background:var(--blue);width:100%;transition:width 1s linear;"></div>
+      </div>
+
+      <!-- Sandbox info -->
+      <div style="font-size:11.5px;background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:10px;padding:10px 12px;margin-bottom:14px;text-align:left;">
+        <strong>💡 Sandbox Mode:</strong> Klik tombol hijau untuk simulasi langsung, atau gunakan <a href="https://simulator.sandbox.midtrans.com/qris/index" target="_blank" style="color:var(--blue);text-decoration:underline;">Midtrans QRIS Simulator</a>.
+      </div>
+
+      <!-- Tombol simulasi (sandbox only) -->
+      <button onclick="simulateTopupSuccess('${transactionId}')" id="btn-sim-${transactionId}"
+        style="width:100%;padding:13px;background:#16a34a;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:10px;">
+        ✅ Simulasi Pembayaran Berhasil
+      </button>
+
+      <!-- Tombol batal -->
+      <button onclick="closeQrisModal()" style="width:100%;padding:12px;background:none;border:1.5px solid var(--border);border-radius:12px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;">
+        Batal & Tutup
+      </button>
+    </div>`;
+  document.body.appendChild(overlay);
+  document.body.style.overflow = 'hidden';
+
+  // Countdown bar
+  const totalMs = expireMs - Date.now();
+  const bar = document.getElementById('qris-countdown-bar');
+  let elapsed = 0;
+  const countdownTick = setInterval(() => {
+    elapsed += 1000;
+    const pct = Math.max(0, 100 - (elapsed / totalMs * 100));
+    if(bar) bar.style.width = pct + '%';
+    if(pct <= 0) clearInterval(countdownTick);
+  }, 1000);
+  overlay._countdownTick = countdownTick;
+}
+
+function closeQrisModal(){
+  clearInterval(_topupPollInterval);
+  document.body.style.overflow = '';
+  const el = document.getElementById('qris-overlay');
+  if(el){
+    if(el._countdownTick) clearInterval(el._countdownTick);
+    el.remove();
+  }
+}
+
+// ── DEMO MODE: simulasi langsung di frontend, tanpa panggil backend ────────
+// Untuk mengembalikan ke mode normal: hapus blok ini dan uncomment NORMAL MODE
+// ──────────────────────────────────────────────────────────────────────────
+async function simulateTopupSuccess(transactionId){
+  const btn = document.getElementById('btn-sim-' + transactionId);
+  if(btn){ btn.disabled = true; btn.textContent = '⏳ Memproses simulasi...'; }
+
+  // Ambil nominal dari tampilan modal (elemen yang sudah dirender showQrisModal)
+  // Cara: cari elemen nominal di overlay (format "Rp X.XXX")
+  let amount = 0;
+  const overlay = document.getElementById('qris-overlay');
+  if(overlay){
+    const nomEl = overlay.querySelector('[data-demo-amount]');
+    if(nomEl) amount = parseInt(nomEl.dataset.demoAmount) || 0;
+  }
+
+  // Simulasi jeda proses (lebih natural untuk demo)
+  await new Promise(r => setTimeout(r, 900));
+
+  // Update saldo di currentUser (state lokal)
+  if(currentUser && amount > 0){
+
+  const res = await apiRequest(
+    'POST',
+    '/auth/add-saldo',
+    { amount }
+  );
+
+  currentUser.saldo = res.data.saldo;
+
+  localStorage.setItem(
+    'payungin_user',
+    JSON.stringify(currentUser)
+  );
+
+}
+
+  // Catat transaksi dummy di state lokal (opsional, untuk tampilan riwayat)
+  // (tidak wajib karena backend tidak dipanggil)
+
+  // Update UI: status QRIS → berhasil
+  updateQrisStatus('success');
+  showToast(`✅ Simulasi berhasil! Saldo bertambah ${fmt(amount)} 🎉`);
+
+  // Tutup modal QRIS dan refresh UI setelah 1.5 detik
+  setTimeout(() => {
+
+  closeQrisModal();
+
+  document.getElementById('saldo-display').textContent =
+    fmt(currentUser.saldo);
+
+  document.getElementById('topbar-saldo').textContent =
+    fmt(currentUser.saldo);
+
+}, 1500);
+}
+// ── END DEMO MODE ──────────────────────────────────────────────────────────
+
+/* ── NORMAL MODE (aktifkan kembali setelah Midtrans merchant aktif) ────────
+// Tombol simulasi bayar — memanggil endpoint backend (sandbox only)
+async function simulateTopupSuccess(transactionId){
+  const btn = document.getElementById('btn-sim-' + transactionId);
+  if(btn){ btn.disabled = true; btn.textContent = '⏳ Memproses simulasi...'; }
+  try {
+    const res = await apiRequest('POST', `/transactions/topup/${transactionId}/simulate-success`);
+    if(res.success){
+      updateQrisStatus('success');
+      showToast('✅ Simulasi berhasil! Saldo sedang diperbarui...');
+    } else {
+      showToast(res.message || 'Simulasi gagal.');
+      if(btn){ btn.disabled = false; btn.textContent = '✅ Simulasi Pembayaran Berhasil (Sandbox)'; }
+    }
+  } catch(err){
+    showToast(err.message || 'Gagal simulasi. Pastikan server berjalan.');
+    if(btn){ btn.disabled = false; btn.textContent = '✅ Simulasi Pembayaran Berhasil (Sandbox)'; }
+  }
+}
+── END NORMAL MODE ──────────────────────────────────────────────────────── */
+
+// Fungsi ini tidak lagi digunakan tapi dibiarkan untuk kompatibilitas
+async function simulateMidtransPayment(){
+  showToast('Gunakan Midtrans Sandbox simulator di https://simulator.sandbox.midtrans.com/qris/index');
+}
+
+// ══════════════════════════════════
+//  REFUND FLOW
+// ══════════════════════════════════
+function rfShow(s){ [1,2,3].forEach(i=>document.getElementById('rf-s'+i).style.display=i===s?'block':'none'); }
+function rfGo(step){
+  if(step===2){ document.getElementById('rf-ew-lbl').textContent=rf.ew; }
+  if(step===3){
+    const p=document.getElementById('rf-phone').value.trim();
+    if(!p||p.length<8){showToast('Nomor tidak valid!');return;}
+    rf.phone=p;
+    // Baca saldo dari currentUser (bukan getUD lama)
+    const saldo = currentUser ? (currentUser.saldo || 0) : 0;
+    document.getElementById('rf-saldo-lbl').textContent=fmt(saldo);
+    document.getElementById('rf-sum-ew').textContent=rf.ew;
+    document.getElementById('rf-sum-phone').textContent=p;
+    document.getElementById('rf-sum-amount').textContent='-';
+    document.getElementById('rf-btn3').disabled=true;
+    rf.amount=0;
+    document.getElementById('rf-custom').value='';
+    const grid=document.getElementById('rf-nom-grid');
+    grid.innerHTML='';
+    [5000,10000,15000,20000,25000].filter(n=>n<=saldo).forEach(n=>{
+      const btn=document.createElement('button');
+      btn.className='nom-opt'; btn.textContent=fmt(n);
+      btn.onclick=()=>{
+        document.querySelectorAll('#rf-nom-grid .nom-opt').forEach(b=>b.classList.remove('sel'));
+        btn.classList.add('sel');
+        document.getElementById('rf-custom').value='';
+        rf.amount=n;
+        document.getElementById('rf-sum-amount').textContent=fmt(n);
+        document.getElementById('rf-btn3').disabled=false;
+      };
+      grid.appendChild(btn);
+    });
+    if(!grid.children.length) grid.innerHTML='<p style="color:var(--muted);font-size:13px;grid-column:span 3">Saldo tidak mencukupi</p>';
+  }
+  rfShow(step);
+}
+function rfCustomInput(){
+  const val=parseInt(document.getElementById('rf-custom').value);
+  document.querySelectorAll('#rf-nom-grid .nom-opt').forEach(b=>b.classList.remove('sel'));
+  const saldo = currentUser ? (currentUser.saldo || 0) : 0;
+  if(val>=5000&&val<=saldo){
+    rf.amount=val;
+    document.getElementById('rf-sum-amount').textContent=fmt(val);
+    document.getElementById('rf-btn3').disabled=false;
+  } else {
+    rf.amount=0;
+    document.getElementById('rf-sum-amount').textContent='-';
+    document.getElementById('rf-btn3').disabled=true;
+  }
+}
+async function confirmRefund(){
+  if(!rf.amount || !rf.ew || !rf.phone) return;
+  const btn = document.getElementById('rf-btn3');
+  if(btn){ btn.disabled=true; btn.textContent='Memproses...'; }
+  try {
+    await apiRequest('POST', '/refund/request', {
+      amount:        rf.amount,
+      method:        'ewallet',
+      providerName:  rf.ew,
+      accountName:   rf.phone,   // nama pemilik akun (bisa nama user)
+      accountNumber: rf.phone    // nomor HP / akun e-wallet
+    });
+    closeModal('modal-refund');
+    showToast(`Permintaan penarikan ${fmt(rf.amount)} ke ${rf.ew} dikirim ✅\nAdmin akan proses dalam 1-3 hari kerja.`);
+  } catch(err){
+    showToast(err.message || 'Gagal mengajukan refund.');
+  } finally {
+    rf={ew:'',phone:'',amount:0};
+    document.getElementById('rf-phone').value='';
+    document.getElementById('rf-btn1').disabled=true;
+    document.querySelectorAll('#modal-refund .ew-opt').forEach(e=>e.classList.remove('sel'));
+    rfShow(1);
+    if(btn){ btn.disabled=false; btn.textContent='Ajukan Penarikan'; }
+  }
+}
+
+// ══════════════════════════════════
+//  BANTUAN / CS
+// ══════════════════════════════════
+function backToCSMenu(){
+  stopChatPolling();
+  document.getElementById('cs-menu').style.display='block';
+  document.getElementById('kerusakan-section').classList.remove('visible');
+  document.getElementById('chat-box').classList.remove('visible');
+}
+async function openLaporanKerusakan(){
+  document.getElementById('cs-menu').style.display='none';
+  document.getElementById('kerusakan-section').classList.add('visible');
+  document.getElementById('chat-box').classList.remove('visible');
+  // reset form
+  uploadedDamagePhoto = null;
+  document.getElementById('photo-input').value = '';
+  document.getElementById('photo-preview').style.display='none';
+  document.getElementById('photo-preview').src='';
+  document.getElementById('rusak-desc').value='';
+  document.getElementById('btn-kirim-laporan').disabled=true;
+  document.getElementById('verify-waiting').classList.remove('visible');
+  document.getElementById('type-rusak').checked = true;
+  updateLaporanType();
+
+  // Load daftar pinjaman aktif ke dropdown
+  const sel     = document.getElementById('laporan-payung-select');
+  const noLoan  = document.getElementById('laporan-no-loan');
+  sel.innerHTML = '<option value="">Memuat...</option>';
+  try {
+    const res   = await apiRequest('GET', '/loans/active');
+    const loans = res.data?.loans || [];
+    if (loans.length === 0) {
+      sel.innerHTML = '<option value="">Tidak ada pinjaman aktif</option>';
+      noLoan.style.display = 'block';
+    } else {
+      noLoan.style.display = 'none';
+      sel.innerHTML = '<option value="">-- Pilih payung --</option>' +
+        loans.map(l => `<option value="${l.umbrellaId}" data-loan-id="${l.id}">${l.umbrellaCode} (dari ${l.pickupStation})</option>`).join('');
+    }
+  } catch(e) {
+    sel.innerHTML = '<option value="">Gagal memuat. Coba lagi.</option>';
+  }
+  checkLaporanReady();
+}
+
+// Perbarui label saat user memilih jenis laporan
+function updateLaporanType() {
+  const isHilang = document.getElementById('type-hilang').checked;
+  const optRusak  = document.getElementById('opt-rusak');
+  const optHilang = document.getElementById('opt-hilang');
+  const uploadLbl = document.getElementById('upload-text-label');
+  const descLbl   = document.getElementById('desc-label');
+
+  if (isHilang) {
+    optRusak.style.cssText  = 'border:2px solid var(--border);background:var(--bg);border-radius:10px;padding:12px;text-align:center;font-weight:700;font-size:13px;color:var(--muted);';
+    optHilang.style.cssText = 'border:2px solid var(--blue);background:var(--blue-light);border-radius:10px;padding:12px;text-align:center;font-weight:700;font-size:13px;color:var(--blue);';
+    if (uploadLbl) uploadLbl.textContent = 'Klik untuk memilih foto (kondisi terakhir / bukti kehilangan)';
+    if (descLbl)   descLbl.textContent = 'Keterangan Kehilangan';
+  } else {
+    optRusak.style.cssText  = 'border:2px solid var(--blue);background:var(--blue-light);border-radius:10px;padding:12px;text-align:center;font-weight:700;font-size:13px;color:var(--blue);';
+    optHilang.style.cssText = 'border:2px solid var(--border);background:var(--bg);border-radius:10px;padding:12px;text-align:center;font-weight:700;font-size:13px;color:var(--muted);';
+    if (uploadLbl) uploadLbl.textContent = 'Klik untuk memilih foto payung yang rusak';
+    if (descLbl)   descLbl.textContent = 'Deskripsi Kerusakan';
+  }
+  checkLaporanReady();
+}
+function handlePhotoUpload(e){
+  const file = e.target.files[0];
+  if(!file) return;
+
+  uploadedDamagePhoto = file;
+
+  const reader = new FileReader();
+
+  reader.onload = ev => {
+    const img = document.getElementById('photo-preview');
+    img.src = ev.target.result;
+    img.style.display = 'block';
+    img.dataset.loaded = 'true'; // flag eksplisit
+    checkLaporanReady();
+  };
+
+  // Trigger checkLaporanReady segera (sebelum onload) karena file sudah ada
+  checkLaporanReady();
+
+  reader.readAsDataURL(file);
+}
+function checkLaporanReady(){
+  const hasPhoto   = !!uploadedDamagePhoto;
+  const hasDesc    = document.getElementById('rusak-desc').value.trim().length > 0;
+  const hasPayung  = !!document.getElementById('laporan-payung-select')?.value;
+  document.getElementById('btn-kirim-laporan').disabled = !(hasPhoto && hasDesc && hasPayung);
+}
+async function kirimLaporanKerusakan(){
+  const description  = document.getElementById('rusak-desc').value.trim();
+  const reportType   = document.getElementById('type-hilang').checked ? 'hilang' : 'rusak';
+  const sel          = document.getElementById('laporan-payung-select');
+  const umbrellaId   = sel.value;
+  const selectedOpt  = sel.options[sel.selectedIndex];
+  const loanId       = selectedOpt?.dataset?.loanId || null;
+
+  if (!umbrellaId) {
+    showToast('Pilih payung yang ingin dilaporkan terlebih dahulu.');
+    return;
+  }
+  if (!uploadedDamagePhoto) {
+    showToast('Upload foto terlebih dahulu');
+    return;
+  }
+  if (!description) {
+    showToast('Isi deskripsi terlebih dahulu');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('umbrellaId',  umbrellaId);
+  if (loanId) formData.append('loanId', loanId);
+  formData.append('reportType',  reportType);
+  formData.append('description', description);
+  formData.append('photos',      uploadedDamagePhoto);
+
+  const btn = document.getElementById('btn-kirim-laporan');
+  btn.disabled = true;
+  btn.textContent = 'Mengirim...';
+
+  try {
+    await apiRequest('POST', '/damage/report', formData);
+    document.getElementById('verify-waiting').classList.add('visible');
+    showToast('Laporan terkirim! Menunggu verifikasi admin...');
+    btn.textContent = 'Terkirim ✅';
+  } catch(err) {
+    showToast(err.message || 'Gagal mengirim laporan');
+    btn.disabled = false;
+    btn.textContent = 'Kirim Laporan';
+  }
+}
+
+// ═══════════════════════════════════════════
+//  LIVE CHAT CS
+//  Polling setiap 3 detik untuk pesan baru dari admin
+// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
+//  LIVE CHAT CS — polling 3 detik, riwayat persisten, scroll cerdas
+//  - Hanya 2 pesan otomatis (welcome + ack setelah pesan pertama user)
+//  - Tidak ada auto-reply/bot sesudah itu
+//  - Re-open halaman → langsung load riwayat dari DB
+//  - Auto-scroll HANYA saat pesan baru & user tidak sedang baca ke atas
+// ═══════════════════════════════════════════════════════════
+let _csTicketId      = null;
+let _csLastMsgId     = null;
+let _csPollTimer     = null;
+let _isSendingChat   = false;           // debounce agar sendChat tidak double-fire
+const _renderedMsgIds = new Set();      // track ID pesan yang sudah dirender → cegah duplikat
+
+function _chatIsAtBottom() {
+  const msgs = document.getElementById('chat-messages');
+  if (!msgs) return true;
+  // Toleransi 60px — dianggap "di bawah" jika kurang dari 60px dari bawah
+  return msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight < 60;
+}
+
+function _chatScrollToBottom() {
+  const msgs = document.getElementById('chat-messages');
+  if (msgs) msgs.scrollTop = msgs.scrollHeight;
+}
+
+// Buka halaman chat — buat/lanjutkan tiket, langsung load riwayat
+async function openLiveChat() {
+  document.getElementById('cs-menu').style.display = 'none';
+  document.getElementById('kerusakan-section').classList.remove('visible');
+  document.getElementById('chat-box').classList.add('visible');
+
+  const msgs = document.getElementById('chat-messages');
+  msgs.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:13px;padding:20px;">Menghubungkan ke CS...</div>';
+
+  stopChatPolling(); // pastikan tidak ada polling ganda
+
+  try {
+    const res   = await apiRequest('POST', '/cs/tickets', { type: 'lainnya' });
+    _csTicketId = res.data.ticketId;
+
+    // Load SELURUH riwayat (initial load → ambil semua pesan dari DB)
+    await loadAllChatHistory();
+
+    // Mulai polling hanya untuk pesan BARU setelah riwayat termuat
+    startChatPolling();
+  } catch(err) {
+    msgs.innerHTML = '<div style="text-align:center;color:var(--red);font-size:13px;padding:20px;">Gagal menghubungi CS. Coba lagi.</div>';
+  }
+}
+
+// Load seluruh riwayat (dipakai saat buka halaman)
+async function loadAllChatHistory() {
+  if (!_csTicketId) return;
+  try {
+    const res      = await apiRequest('GET', `/cs/tickets/${_csTicketId}/messages`);
+    const messages = res.data.messages || [];
+    const msgs     = document.getElementById('chat-messages');
+    msgs.innerHTML = '';
+    _csLastMsgId   = null;
+    _renderedMsgIds.clear(); // reset set dedup saat load ulang riwayat
+    messages.forEach(m => renderChatMsg(m, false)); // false = jangan auto-scroll tiap pesan
+    if (messages.length > 0) {
+      _csLastMsgId = messages[messages.length - 1].id;
+    }
+    _chatScrollToBottom();
+  } catch(e) { /* silent */ }
+}
+
+// Polling: hanya ambil pesan baru setelah lastMsgId
+async function pollNewMessages() {
+  if (!_csTicketId) return;
+  try {
+    const url      = `/cs/tickets/${_csTicketId}/messages${_csLastMsgId ? '?after='+_csLastMsgId : ''}`;
+    const res      = await apiRequest('GET', url);
+    const newMsgs  = res.data.messages || [];
+
+    if (newMsgs.length === 0) return;
+
+    const wasAtBottom = _chatIsAtBottom();
+    newMsgs.forEach(m => renderChatMsg(m, false));
+    _csLastMsgId = newMsgs[newMsgs.length - 1].id;
+
+    // Hanya scroll ke bawah jika sebelumnya user sudah di bawah
+    if (wasAtBottom) _chatScrollToBottom();
+  } catch(e) { /* silent */ }
+}
+
+// Render satu pesan ke chat
+// Gunakan m.id sebagai dedup key — jika sudah pernah dirender, skip
+function renderChatMsg(m, autoScroll = true) {
+  const msgs = document.getElementById('chat-messages');
+  if (!msgs) return;
+
+  // Dedup: jika pesan ini sudah pernah dirender (ada ID dan sudah di set), skip
+  if (m.id && _renderedMsgIds.has(m.id)) return;
+  if (m.id) _renderedMsgIds.add(m.id);
+
+  const div  = document.createElement('div');
+  div.className = m.senderType === 'user' ? 'msg msg-user' : 'msg msg-cs';
+  const time = new Date(m.createdAt).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+  div.innerHTML = `<div class="msg-bubble">${m.message}</div><div class="msg-time">${time}</div>`;
+  msgs.appendChild(div);
+  if (autoScroll) _chatScrollToBottom();
+}
+
+function startChatPolling() {
+  stopChatPolling();
+  _csPollTimer = setInterval(pollNewMessages, 3000);
+}
+
+function stopChatPolling() {
+  if (_csPollTimer) { clearInterval(_csPollTimer); _csPollTimer = null; }
+}
+
+async function sendChat() {
+  // Debounce: cegah double-send dari Enter + klik tombol bersamaan
+  if (_isSendingChat) return;
+  const input = document.getElementById('chat-input');
+  const text  = input.value.trim();
+  if (!text || !_csTicketId) return;
+  _isSendingChat = true;
+  input.value = '';
+  try {
+    const res = await apiRequest('POST', `/cs/tickets/${_csTicketId}/messages`, { message: text });
+    const userMsg = res.data.message;
+
+    // Render pesan user langsung (dengan ID dari server agar dedup bekerja)
+    renderChatMsg({ id: userMsg.id, senderType: 'user', message: text, createdAt: userMsg.createdAt }, true);
+    // Set _csLastMsgId ke ID pesan user (bukan ackMessage), polling akan ambil setelah ini
+    _csLastMsgId = userMsg.id;
+
+    // Jika ada ack dari sistem (pesan pertama user saja)
+    if (res.data.ackMessage) {
+      const ack = res.data.ackMessage;
+      setTimeout(() => {
+        renderChatMsg({ id: ack.id, senderType: 'cs', message: ack.message, createdAt: ack.createdAt }, true);
+        // Update lastMsgId ke ackMessage.id agar polling tidak mengambil ackMessage lagi
+        _csLastMsgId = ack.id;
+      }, 400);
+    }
+  } catch(err) {
+    showToast(err.message || 'Gagal mengirim pesan.');
+    input.value = text;
+  } finally {
+    _isSendingChat = false;
+  }
+}
+
+// Backward compat
+function openChat(mode){ openLiveChat(); }
+function appendCSMsg(text){ renderChatMsg({ senderType:'cs', message:text, createdAt:new Date() }, true); }
+function appendUserMsg(text){ renderChatMsg({ senderType:'user', message:text, createdAt:new Date() }, true); }
+
+// ══════════════════════════════════
+//  MODALS
+// ══════════════════════════════════
+function openModal(id){
+  document.getElementById(id).classList.add('open');
+  if(id==='modal-topup') tuShowStep(1);
+  if(id==='modal-refund') rfShow(1);
+}
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+function closeModalOutside(e,id){ if(e.target.id===id) closeModal(id); }
+
+// ═══════════════════════════════════════════
+//  RESPOND PENALTY — User merespons denda admin
+// ═══════════════════════════════════════════
+async function respondPenalty(reportId, action) {
+  const label = action === 'agree' ? 'menyetujui' : 'menolak';
+  if (!confirm(`Apakah Anda yakin ingin ${label} pengajuan denda ini?`)) return;
+
+  try {
+    await apiRequest('POST', `/damage/reports/${reportId}/respond-penalty`, { action });
+    showToast(action === 'agree' ? 'Denda disetujui. Saldo dipotong.' : 'Penolakan denda dicatat.');
+    await refreshUI(); // Refresh riwayat laporan
+    switchPage('profil');
+  } catch(err) {
+    showToast(err.message || 'Gagal memproses respons denda.');
+  }
+}
+
+// ══════════════════════════════════
+//  TOAST
+// ══════════════════════════════════
+let _tt;
+function showToast(msg){
+  const t = document.getElementById('toast');
+
+  t.textContent = msg;
+  t.classList.add('show');
+
+  clearTimeout(toastTimeout);
+
+  toastTimeout = setTimeout(() => {
+    t.classList.remove('show');
+  }, 2800);
+}
+</script>
+</body>
+</html>
