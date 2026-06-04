@@ -776,7 +776,7 @@
         <!-- Card 3: Rekomendasi Lokasi dengan Stok Tersedia -->
         <div class="ai-rec-card" id="ai-rec-card">
           <div class="ai-rec-title">
-            ☂️ Rekomendasi Lokasi
+            ☂️ Rekomendasi Station
             <span class="ai-badge" style="background:#dcfce7; color:var(--green);">Tersedia</span>
           </div>
           <div class="ai-rec-list" id="ai-rec-list">
@@ -1005,7 +1005,7 @@
     <!-- Banner peringatan payung rusak — hanya tampil jika laporan rusak sudah disetujui -->
     <div id="kembalikan-damage-banner" style="display:none;background:#fff7ed;border:1.5px solid #fdba74;border-radius:10px;padding:11px 14px;margin:10px 0;font-size:12px;color:#92400e;line-height:1.6;">
       🔧 <strong>Payung ini telah dilaporkan rusak.</strong><br>
-      Denda sudah dipotong otomatis dari saldo deposit Anda oleh admin.<br>
+      Denda akan dipotong otomatis dari saldo deposit Anda.<br>
       Silakan lanjutkan proses pengembalian payung. <strong>Tidak ada biaya tambahan.</strong>
     </div>
     <div class="modal-sub" id="kembalikan-sub">Pilih station pengembalian</div>
@@ -1631,7 +1631,7 @@ async function renderLoans(){
     // Tampilkan banner peringatan jika laporan rusak sudah disetujui admin
     const damageBanner = loan.hasDamageReport ? `
       <div style="background:#fff7ed;border:1.5px solid #fdba74;border-radius:8px;padding:9px 12px;margin-bottom:8px;font-size:12px;color:#92400e;line-height:1.5;">
-        🔧 <strong>Laporan kerusakan disetujui.</strong> Denda sudah dipotong. Silakan kembalikan payung fisik.
+        🔧 <strong>Laporan kerusakan disetujui.</strong> Denda akan dipotong. Silakan kembalikan payung fisik.
       </div>` : '';
 
     div.innerHTML = `
@@ -2105,7 +2105,7 @@ function showBorrowConfirm(umbrellaId, umbrellaCode) {
         </div>
       </div>
       <div style="background:var(--blue-light);border-radius:10px;padding:10px 14px;margin-bottom:20px;font-size:12px;color:var(--navy);text-align:left;line-height:1.6;">
-        💡 Biaya <strong>Rp 3.000</strong> per 24 jam (atau sebagian 24 jam).<br>
+        💡 Biaya <strong>Rp 3.000</strong> per 24 jam.<br>
         Saldo dipotong otomatis saat pengembalian.
       </div>
       <div style="font-size:14px;color:var(--muted);margin-bottom:20px;">Apakah Anda yakin ingin meminjam payung ini?</div>
@@ -2158,7 +2158,7 @@ async function openKembalikan(loanId, umbrellaCode, hasDamageReport = false){
   const dmgBanner = document.getElementById('kembalikan-damage-banner');
   if (dmgBanner) dmgBanner.style.display = hasDamageReport ? 'block' : 'none';
   const biayaVal = document.getElementById('kem-biaya-val');
-  if (biayaVal) biayaVal.textContent = hasDamageReport ? 'Gratis (denda sudah dipotong)' : 'Rp 3.000';
+  if (biayaVal) biayaVal.textContent = hasDamageReport ? 'Gratis (Diberlakukan Denda)' : 'Rp 3.000';
 
   // Reload stations from API to get latest data
   try {
